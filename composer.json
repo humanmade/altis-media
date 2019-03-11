@@ -1,0 +1,12 @@
+{
+	"name": "humanmade/media",
+	"description": "Media Module for Platform",
+	"type": "library",
+	"license": "GPL-2.0-or-later",
+	"authors": [
+		{
+			"name": "Human Made",
+			"email": "hello@humanmade.com"
+		}
+	]
+}
