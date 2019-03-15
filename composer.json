@@ -8,5 +8,16 @@
 			"name": "Human Made",
 			"email": "hello@humanmade.com"
 		}
-	]
+	],
+	"require": {
+		"humanmade/tachyon-plugin": "^0.9.2",
+		"humanmade/smart-media": "^0.1.11",
+		"humanmade/gaussholder": "dev-master",
+		"humanmade/aws-rekognition": "^0.1.2"
+	},
+	"autoload" : {
+		"files": [
+			"load.php"
+		]
+	}
 }
