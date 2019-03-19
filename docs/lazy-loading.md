@@ -13,7 +13,7 @@ Lazy loading of images in post content is enabled by default. This behavior can 
 Lazy loading is enabled on a per image size basis, so you must configure the specific image sizes. This is done via the `image-sizes` key in the configuration:
 
 ```json
-"extra" : {
+"extra": {
 	"platform": {
 		"modules": {
 			"media": {
