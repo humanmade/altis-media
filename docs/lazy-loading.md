@@ -14,11 +14,13 @@ Lazy loading is enabled on a per image size basis, so you must configure the spe
 
 ```json
 "extra" : {
-	"modules": {
-		"media": {
-			"gaussholder": {
-				"image-sizes": {
-					"large": 32
+	"platform": {
+		"modules": {
+			"media": {
+				"gaussholder": {
+					"image-sizes": {
+						"large": 32
+					}
 				}
 			}
 		}
