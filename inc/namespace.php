@@ -16,6 +16,9 @@ function bootstrap() {
 	add_action( 'plugins_loaded', __NAMESPACE__ . '\\load_plugins', 1 );
 }
 
+/**
+ * Load all the WordPress plugins that are part of the media module.
+ */
 function load_plugins() {
 	$config = Platform\get_config()['modules']['media'];
 	$vendor_dir = Platform\ROOT_DIR . '/vendor';
