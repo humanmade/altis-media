@@ -72,6 +72,10 @@ function set_gaussholder_image_sizes( array $sizes ) : array {
  * @return RekognitionClient
  */
 function override_aws_rekognition_aws_client( $client, array $params ) : RekognitionClient {
+	// The get_aws_sdk() function will set the correct region automatically.
+	if ( isset( $params['region'] ) ) {
+		unset( $params['region'] );
+	}
 	return Platform\get_aws_sdk()->createRekognition( $params );
 }
 
