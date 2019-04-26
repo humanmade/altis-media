@@ -38,6 +38,9 @@ function load_plugins() {
 			add_filter( 'gaussholder.image_sizes', __NAMESPACE__ . '\\set_gaussholder_image_sizes' );
 		}
 		require_once $vendor_dir . '/humanmade/gaussholder/gaussholder.php';
+		if ( $config['tachyon'] ) {
+			add_action( 'plugins_loaded', __NAMESPACE__ . '\\set_gaussholder_filter_after_tachyon', 11 );
+		}
 	}
 
 	if ( $config['rekognition'] ) {
@@ -62,6 +65,22 @@ function set_gaussholder_image_sizes( array $sizes ) : array {
 	$config = Platform\get_config()['modules']['media'];
 	$sizes = array_merge( $sizes, $config['gaussholder']['image-sizes'] );
 	return $sizes;
+}
+
+/**
+ * Re-order the Gaussholder content filter after Tachyon.
+ *
+ * Because Gaussholder and Tachyon filter the post content via the
+ * the_content filter, we need to make sure it happens in the correct
+ * order, as we want Gaussholder to hook in after Tachyon has done
+ * all the image URL replacements.
+ *
+ * @return void
+ */
+function set_gaussholder_filter_after_tachyon() {
+	remove_filter( 'the_content', 'Gaussholder\\Frontend\\mangle_images', 30 );
+	// Tachyon hooks the content at 999999.
+	add_filter( 'the_content', 'Gaussholder\\Frontend\\mangle_images', 999999 + 1 );
 }
 
 /**
