@@ -13,7 +13,7 @@
 		"php": ">=7.1",
 		"humanmade/tachyon-plugin": "0.10.0",
 		"humanmade/smart-media": "0.1.12",
-		"humanmade/gaussholder": "1.1.0",
+		"humanmade/gaussholder": "1.1.1",
 		"humanmade/aws-rekognition": "^0.1.2"
 	},
 	"autoload" : {
