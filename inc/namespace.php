@@ -1,15 +1,17 @@
 <?php
 
-namespace HM\Platform\Media;
+namespace Altis\Media;
 
+use const Altis\ROOT_DIR;
+use function Altis\get_aws_sdk;
+use function Altis\get_config;
 use Aws\Rekognition\RekognitionClient;
 use function HM\AWS_Rekognition\get_attachment_labels;
-use HM\Platform;
 
 /**
  * Bootstrap function to set up the module.
  *
- * Called from the HM Platform module loader if the module is activated.
+ * Called from the Altis module loader if the module is activated.
  *
  * @return void
  */
@@ -21,8 +23,8 @@ function bootstrap() {
  * Load all the WordPress plugins that are part of the media module.
  */
 function load_plugins() {
-	$config = Platform\get_config()['modules']['media'];
-	$vendor_dir = Platform\ROOT_DIR . '/vendor';
+	$config = get_config()['modules']['media'];
+	$vendor_dir = ROOT_DIR . '/vendor';
 
 	if ( $config['tachyon'] ) {
 		require_once $vendor_dir . '/humanmade/tachyon-plugin/tachyon.php';
@@ -62,7 +64,7 @@ function load_plugins() {
  * @return array
  */
 function set_gaussholder_image_sizes( array $sizes ) : array {
-	$config = Platform\get_config()['modules']['media'];
+	$config = get_config()['modules']['media'];
 	$sizes = array_merge( $sizes, $config['gaussholder']['image-sizes'] );
 	return $sizes;
 }
@@ -84,14 +86,14 @@ function set_gaussholder_filter_after_tachyon() {
 }
 
 /**
- * Override the AWS Rekognition Client with the one from Platform.
+ * Override the AWS Rekognition Client with the one from Altis.
  *
  * @param null|RekognitionClient $client
  * @param array $params
  * @return RekognitionClient
  */
 function override_aws_rekognition_aws_client( $client, array $params ) : RekognitionClient {
-	return Platform\get_aws_sdk()->createRekognition( $params );
+	return get_aws_sdk()->createRekognition( $params );
 }
 
 /**

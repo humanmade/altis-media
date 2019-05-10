@@ -2,7 +2,7 @@
 	<tr>
 		<td align="left" width="70">
 			<strong>Media</strong><br />
-			Media module for Platform.
+			Media module for Altis.
 		</td>
 		<td align="right" width="20%">
 		</td>
@@ -19,4 +19,4 @@
 
 # Media
 
-The Media module includes features to create, manage and server media across Platform.
+The Media module includes features to create, manage and server media across Altis.

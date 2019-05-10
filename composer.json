@@ -1,6 +1,6 @@
 {
 	"name": "humanmade/media",
-	"description": "Media Module for Platform",
+	"description": "Media module for Altis",
 	"type": "library",
 	"license": "GPL-2.0-or-later",
 	"authors": [

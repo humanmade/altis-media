@@ -14,7 +14,7 @@ Lazy loading is enabled on a per image size basis, so you must configure the spe
 
 ```json
 "extra": {
-	"platform": {
+	"altis": {
 		"modules": {
 			"media": {
 				"gaussholder": {
