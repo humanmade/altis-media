@@ -53,8 +53,31 @@ function load_plugins() {
 		add_filter( 'hm.aws.rekognition.client', __NAMESPACE__ . '\\override_aws_rekognition_aws_client', 10, 2 );
 		add_filter( 'ep_post_sync_args_post_prepare_meta', __NAMESPACE__ . '\\add_rekognition_keywords_to_search_index', 10, 2 );
 		add_filter( 'ep_search_fields', __NAMESPACE__ . '\\add_rekognition_keywords_to_search_fields' );
+
+		/**
+		 * Configure Rekognition features.
+		 */
+		if ( is_array( $config['rekognition'] ) ) {
+			$rekognition = $config['rekognition'];
+			add_filter( 'hm.aws.rekognition.labels', get_bool_callback( $rekognition['labels'] ?? true ) );
+			add_filter( 'hm.aws.rekognition.moderation', get_bool_callback( $rekognition['moderation'] ?? false ) );
+			add_filter( 'hm.aws.rekognition.faces', get_bool_callback( $rekognition['faces'] ?? false ) );
+			add_filter( 'hm.aws.rekognition.celebrities', get_bool_callback( $rekognition['celebrities'] ?? false ) );
+			add_filter( 'hm.aws.rekognition.text', get_bool_callback( $rekognition['text'] ?? false ) );
+		}
+
 		require_once $vendor_dir . '/humanmade/aws-rekognition/plugin.php';
 	}
+}
+
+/**
+ * Returns a callable that return true or false.
+ *
+ * @param boolean $value The value to check.
+ * @return callable A callback that returns $value.
+ */
+function get_bool_callback( bool $value ) : callable {
+	return $value ? '__return_true' : '__return_false';
 }
 
 /**

@@ -13,11 +13,17 @@ if ( ! function_exists( 'add_action' ) ) {
 
 add_action( 'altis.modules.init', function () {
 	$default_settings = [
-		'enabled'     => true,
-		'tachyon'     => true,
+		'enabled' => true,
+		'tachyon' => true,
 		'smart-media' => true,
 		'gaussholder' => true,
-		'rekognition' => true,
+		'rekognition' => [
+			'labels' => true,
+			'moderation' => false,
+			'faces' => false,
+			'celebrities' => false,
+			'text' => false,
+		],
 	];
 	register_module( 'media', __DIR__, 'Media', $default_settings, __NAMESPACE__ . '\\bootstrap' );
 } );
