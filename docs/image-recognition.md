@@ -68,23 +68,19 @@ You can build new features on top of the basic image recognition features either
 
 ### `hm.aws.rekognition.process`
 
-Runs when an image is being processed and recieves the AWS Rekognition client object and the attachment ID. You can use this to do any custom processing such as searching for faces in an existing collection.
+Runs when an image is being processed and recieves the AWS Rekognition client object, the attachment ID and the data to pass for the `Image` parameter. You can use this to do any custom processing such as searching for faces in an existing collection.
 
 ```php
-add_action( 'hm.aws.rekognition.process', function ( Aws\Rekognition\RekognitionClient $client, int $id ) {
-
+add_action( 'hm.aws.rekognition.process', function ( Aws\Rekognition\RekognitionClient $client, int $id, array $image_args ) {
 	$known_faces = $client->searchFacesByImage( [
 		'CollectionId' => 'ABCDEF123456',
 		'FaceMatchThreshold' => 0.9,
-		'Image' => [
-			'Bytes' => file_get_contents( get_attached_file( $id ) ),
-		],
+		'Image' => $image_args,
 	] );
 
 	if ( ! empty( $known_faces['FaceMatches'] ) ) {
 		update_post_meta( $id, 'recognised_faces', $known_faces['FaceMatches'] );
 	}
-
 }, 10, 2 );
 ```
 
@@ -99,6 +95,9 @@ This is useful for doing any post processing of the recognition results such as 
 ```php
 add_filter( 'hm.aws.rekognition.keywords', function ( array $keywords, array $data, int $id ) {
 	$translated_keywords = [];
+
+	// This could be Google translate for example.
+	$translation_service = new TranslationService();
 
 	foreach ( $keywords as $keyword ) {
 		$translated_keywords[] = $translation_service->translate( $keyword, 'fr' );
