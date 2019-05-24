@@ -1,6 +1,6 @@
 <?php
 
-namespace Altis\Media;
+namespace Altis\Media; // @codingStandardsIgnoreLine
 
 use function Altis\register_module;
 

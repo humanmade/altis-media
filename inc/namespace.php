@@ -2,10 +2,10 @@
 
 namespace Altis\Media;
 
+use Aws\Rekognition\RekognitionClient;
 use const Altis\ROOT_DIR;
 use function Altis\get_aws_sdk;
 use function Altis\get_config;
-use Aws\Rekognition\RekognitionClient;
 use function HM\AWS_Rekognition\get_attachment_labels;
 
 /**
