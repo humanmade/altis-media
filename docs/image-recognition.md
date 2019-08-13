@@ -28,7 +28,7 @@ This data can be accessed via the post meta key `hm_aws_rekognition_faces`.
 
 ### Celebrities
 
-This feature returns data on celebrities recognised in an image. Any successful matches will be used to populate the default image alt text if not already set. The alt text can be updated after it has been set dynamically as well.
+This feature returns data on celebrities recognized in an image. Any successful matches will be used to populate the default image alt text if not already set. The alt text can be updated after it has been set dynamically as well.
 
 This data can be accessed via the post meta key `hm_aws_rekognition_celebrities`.
 
@@ -68,7 +68,7 @@ You can build new features on top of the basic image recognition features either
 
 ### `hm.aws.rekognition.process`
 
-Runs when an image is being processed and recieves the AWS Rekognition client object, the attachment ID and the data to pass for the `Image` parameter. You can use this to do any custom processing such as searching for faces in an existing collection.
+Runs when an image is being processed and receives the AWS Rekognition client object, the attachment ID and the data to pass for the `Image` parameter. You can use this to do any custom processing such as searching for faces in an existing collection.
 
 ```php
 add_action( 'hm.aws.rekognition.process', function ( Aws\Rekognition\RekognitionClient $client, int $id, array $image_args ) {
@@ -88,7 +88,7 @@ You can find the [full documentation for the `RekognitionClient` object here](ht
 
 ### `hm.aws.rekognition.keywords`
 
-Filters the keywords stored and used to enhance media library search results. Recieves the current keyword list, the data returned from built in image processing according to what features are enabled eg. labels, faces etc... and the attachment ID.
+Filters the keywords stored and used to enhance media library search results. Receives the current keyword list, the data returned from built in image processing according to what features are enabled eg. labels, faces etc... and the attachment ID.
 
 This is useful for doing any post processing of the recognition results such as translation.
 
