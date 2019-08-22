@@ -167,5 +167,5 @@ function add_rekognition_keywords_to_search_fields( array $search_fields ) : arr
  * Load the safe SVG upload handler.
  */
 function load_safe_svg() {
-	require_once $vendor_dir . '/darylldoyle/safe-svg/safe-svg.php';
+	require_once ROOT_DIR . '/vendor/darylldoyle/safe-svg/safe-svg.php';
 }
