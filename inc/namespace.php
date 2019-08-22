@@ -68,6 +68,9 @@ function load_plugins() {
 
 		require_once $vendor_dir . '/humanmade/aws-rekognition/plugin.php';
 	}
+
+	// Load Safe SVG.
+	add_action( 'plugins_loaded', __NAMESPACE__ . '\\load_safe_svg', 9 );
 }
 
 /**
@@ -158,4 +161,11 @@ function add_rekognition_keywords_to_search_fields( array $search_fields ) : arr
 	$search_fields[] = 'rekognition_labels';
 
 	return $search_fields;
+}
+
+/**
+ * Load the safe SVG upload handler.
+ */
+function load_safe_svg() {
+	require_once ROOT_DIR . '/vendor/darylldoyle/safe-svg/safe-svg.php';
 }
