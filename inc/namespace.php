@@ -31,6 +31,13 @@ function load_plugins() {
 	}
 
 	if ( $config['smart-media'] ) {
+		if ( isset( $config['smart-media']['srcset-modifiers'] ) ) {
+			add_filter( 'hm.smart-media.image-size-modifiers', function () use ( $config ) : array {
+				$modifiers = array_map( 'floatval', (array) $config['smart-media']['srcset-modifiers'] );
+				$modifiers = array_unique( $modifiers );
+				return $modifiers;
+			}, 9 );
+		}
 		require_once $vendor_dir . '/humanmade/smart-media/plugin.php';
 	}
 
