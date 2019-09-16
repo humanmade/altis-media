@@ -32,7 +32,6 @@ function load_plugins() {
 
 	if ( $config['smart-media'] ) {
 		require_once $vendor_dir . '/humanmade/smart-media/plugin.php';
-		remove_filter( 'intermediate_image_sizes_advanced', 'HM\\Media\\Cropper\\prevent_thumbnail_generation' );
 	}
 
 	if ( $config['gaussholder'] ) {
