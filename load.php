@@ -15,7 +15,9 @@ add_action( 'altis.modules.init', function () {
 	$default_settings = [
 		'enabled' => true,
 		'tachyon' => true,
-		'smart-media' => true,
+		'smart-media' => [
+			'srcset-modifiers' => [ 2, 1.5, 0.5, 0.25 ],
+		],
 		'gaussholder' => true,
 		'rekognition' => [
 			'labels' => true,
