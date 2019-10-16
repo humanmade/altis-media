@@ -30,4 +30,4 @@ There are scenarios where you might want to define the thumbnail size via an arr
 
 `$thumb_url = wp_get_attachment_image_src( $attachment_id, [ 900, 450 ], true );`
 
-This will generate a thumbnail on the fly with an array of width and height [w, h] values in pixels
+This will generate a thumbnail on the fly with the dimensions defined by an array of width and height [w, h] values in pixels
