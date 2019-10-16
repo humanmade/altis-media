@@ -2,10 +2,17 @@
 
 You can define additional image thumbnail sizes with `add_image_size`.
 
-Example:
-`add_image_size( 'category-thumb', 300, 9999 ); // 300 pixels wide (and unlimited height)`
+The custom thumbnail sizes should be declared in the callback function to the `after_setup_theme` action.
 
-You can find more info at the [WordPress developer guide](https://developer.wordpress.org/themes/functionality/featured-images-post-thumbnails/#add-custom-featured-image-sizes)
+Example:
+```php
+add_action( 'after_setup_theme', __NAMESPACE__ . '\\theme_setup' );
+function theme_setup() {
+    add_image_size( 'category-thumb', 300, 9999 ); // 300 pixels wide (and unlimited height)
+}
+```
+
+You can find more info at the [WordPress Developer Reference](https://developer.wordpress.org/reference/functions/add_image_size/) and [WordPress developer guide](https://developer.wordpress.org/themes/functionality/featured-images-post-thumbnails/#add-custom-featured-image-sizes)
 
 ## Hooks and filters
 
