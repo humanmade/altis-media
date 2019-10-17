@@ -22,14 +22,14 @@ Example:
 ```php
 add_action( 'after_setup_theme', __NAMESPACE__ . '\\theme_setup' );
 function theme_setup() {
-    // Set the image size by resizing the image proportionally (without distorting it):
-    add_image_size( 'custom-size', 220, 180 ); // 220 pixels wide by 180 pixels tall, soft proportional crop mode
-    
-    // Set the image size by cropping the image (not showing part of it):
-    add_image_size( 'custom-size', 220, 180, true ); // 220 pixels wide by 180 pixels tall, hard crop mode
-    
-    // Set the image size by cropping the image and defining a crop position:
-    add_image_size( 'custom-size', 220, 220, array( 'left', 'top' ) ); // Hard crop left top
+	// Set the image size by resizing the image proportionally (without distorting it):
+	add_image_size( 'custom-size', 220, 180 ); // 220 pixels wide by 180 pixels tall, soft proportional crop mode
+	
+	// Set the image size by cropping the image (not showing part of it):
+	add_image_size( 'custom-size', 220, 180, true ); // 220 pixels wide by 180 pixels tall, hard crop mode
+	
+	// Set the image size by cropping the image and defining a crop position:
+	add_image_size( 'custom-size', 220, 220, array( 'left', 'top' ) ); // Hard crop left top
 }
 ```
 
@@ -54,10 +54,10 @@ This filter allows you to make your custom image sizes available for selection i
 Runs before rendering the list of available image sizes in the sidebar of the media edit screen. Used in conjuction with `add_image_size` 
 
 ```php
-    add_filter( 'image_size_names_choose', function ( array $sizes ) {
-        $sizes['category-thumb'] = __( 'Category Thumb' );
-        return $sizes;
-    });
+add_filter( 'image_size_names_choose', function ( array $sizes ) {
+	$sizes['category-thumb'] = __( 'Category Thumb' );
+	return $sizes;
+});
 ```
 
 [screenshot of media popup]
