@@ -37,9 +37,15 @@ When setting a crop position, the first value in the array is the x axis crop po
 
 This will *not* add a UI for these named sizes under Settings > Media.
 
-You can find more info at the [WordPress Developer Reference](https://developer.wordpress.org/reference/functions/add_image_size/) and [WordPress developer guide](https://developer.wordpress.org/themes/functionality/featured-images-post-thumbnails/#add-custom-featured-image-sizes)
+You can find more info in the [WordPress developer guide](https://developer.wordpress.org/themes/functionality/featured-images-post-thumbnails/#add-custom-featured-image-sizes)
 
-## Hooks and filters
+## Using The Custom Sizes
+
+Once you've defined custom image sizes, there are different ways you can use them.
+
+You can display a post thumbnail: `the_post_thumbnail( 'custom-size` )`
+
+You can display any uploaded image by its attachment ID: `wp_get_attachment_image_src( 1 , 'custom-size' )`
 
 ### `image_size_names_choose`
 
@@ -58,10 +64,14 @@ Runs before rendering the list of available image sizes in the sidebar of the me
 
 You can find the [full documentation for this filter here](https://developer.wordpress.org/reference/hooks/image_size_names_choose/).
 
-## Dynamically defined with a size array
+## Dynamically Defined With A Size Array
 
 There are scenarios where you might want to define the image size via an array:
 
-`$thumb_url = wp_get_attachment_image_src( $attachment_id, [ 900, 450 ], true );`
+```php
+$thumb_url = wp_get_attachment_image_src( $attachment_id, [ 900, 450 ], true );`
+```
 
 This will generate an image on the fly with the dimensions defined by an array of width and height [w, h] values in pixels.
+
+This function doesn't allow setting the crop values though.
