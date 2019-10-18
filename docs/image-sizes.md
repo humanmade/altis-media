@@ -31,7 +31,7 @@ Example:
 add_action( 'after_setup_theme', 'theme_setup' );
 function theme_setup() {
 	// Set the image size by resizing the image while maintaining the aspect ratio:
-	add_image_size( 'custom-size', 220, 180 ); // 220 pixels wide by 180 pixels tall, soft proportional crop mode
+	add_image_size( 'custom-size', 220, 180 ); // Image constrained to 220 pixels wide by 180 pixels tall
 	
 	// Set the image size by cropping the image (not showing part of it):
 	add_image_size( 'custom-size', 220, 180, true ); // 220 pixels wide by 180 pixels tall, hard crop mode
