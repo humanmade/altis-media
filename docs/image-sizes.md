@@ -28,7 +28,7 @@ The custom image sizes should be declared in the callback function to the `after
 
 Example:
 ```php
-add_action( 'after_setup_theme', __NAMESPACE__ . '\\theme_setup' );
+add_action( 'after_setup_theme', 'theme_setup' );
 function theme_setup() {
 	// Set the image size by resizing the image proportionally (without distorting it):
 	add_image_size( 'custom-size', 220, 180 ); // 220 pixels wide by 180 pixels tall, soft proportional crop mode
