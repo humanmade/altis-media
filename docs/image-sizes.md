@@ -30,7 +30,7 @@ Example:
 ```php
 add_action( 'after_setup_theme', 'theme_setup' );
 function theme_setup() {
-	// Set the image size by resizing the image proportionally (without distorting it):
+	// Set the image size by resizing the image while maintaining the aspect ratio:
 	add_image_size( 'custom-size', 220, 180 ); // 220 pixels wide by 180 pixels tall, soft proportional crop mode
 	
 	// Set the image size by cropping the image (not showing part of it):
