@@ -41,7 +41,7 @@ function theme_setup() {
 }
 ```
 
-This will *not* add a UI for these named sizes under Settings > Media.
+Custom images sizes do not show up in the editor by default when editing image blocks. See the [Hooks and Filters section](#hooks-and-filters) below to find out how to do this.
 
 ### Cropping
 
