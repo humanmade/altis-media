@@ -90,6 +90,5 @@ In cases where a specific image size might only be used once you can define the 
 $thumb_url = wp_get_attachment_image_src( $attachment_id, [ 900, 450 ], true );`
 ```
 
-This will generate an image on the fly with the dimensions defined by an array of width and height [w, h] values in pixels.
 
 This function doesn't allow setting the crop values though.
