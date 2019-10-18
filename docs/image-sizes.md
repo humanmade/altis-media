@@ -91,4 +91,4 @@ $thumb_url = wp_get_attachment_image_src( $attachment_id, [ 900, 450 ], true );`
 ```
 
 
-This function doesn't allow setting the crop values though.
+**NOTE**: This method of defining dimensions currently does not support cropping.
