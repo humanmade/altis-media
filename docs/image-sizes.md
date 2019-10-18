@@ -8,13 +8,13 @@ Altis provides some default image sizes, that you can use to render images in th
 - Post Thumbnail
 - Full
 
-They have default dimensions, but you can override these either with code or in the Admin, under Settings > Media.
+They have default dimensions, but you can override these either with code or in the admin, under [Settings > Media](internal://admin/options-media.php).
 
 ![Media Settings](./assets/media-settings.png)
 
-A lot of times, you'll find that you need additional image sizes for different contexts, depending on your theme's design.
+A lot of times, you'll find that you need custom image sizes for different contexts, depending on your theme's design.
 
-You can define additional image sizes with  the`add_image_size` function.
+You can define custom image sizes with the `add_image_size()` function.
 
 This function accepts the following parameters:
 
@@ -47,7 +47,7 @@ This will *not* add a UI for these named sizes under Settings > Media.
 
 Cropping behavior for the image size is dependent on the value of $crop:
 1. If false (default), images will be scaled, not cropped.
-2. If an array in the form of [ x_crop_position, y_crop_position ]:
+2. If an array in the form of `[ x_crop_position, y_crop_position ]`:
     - x_crop_position accepts 'left' 'center', or 'right'.
     - y_crop_position accepts 'top', 'center', or 'bottom'.
     Images will be cropped to the specified dimensions within the defined crop area.
@@ -95,12 +95,11 @@ You can find the [full documentation for this filter here](https://developer.wor
 
 ## Dynamically Defined With A Size Array
 
-There are scenarios where you might want to define the image size via an array:
+In cases where a specific image size might only be used once you can define the image size via an array of width and height values in pixels:
 
 ```php
 $thumb_url = wp_get_attachment_image_src( $attachment_id, [ 900, 450 ], true );`
 ```
 
-This will generate an image on the fly with the dimensions defined by an array of width and height [w, h] values in pixels.
 
-This function doesn't allow setting the crop values though.
+**NOTE**: This method of defining dimensions currently does not support cropping.
