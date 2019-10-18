@@ -12,7 +12,7 @@ They have default dimensions, but you can override these either with code or in 
 
 ![Media Settings](https://user-images.githubusercontent.com/30460/67079140-8b846000-f18a-11e9-8387-038b594f19aa.png)
 
-A lot of times, you'll find that you need additional image sizes for different contexts, depending on your theme's design.
+A lot of times, you'll find that you need custom image sizes for different contexts, depending on your theme's design.
 
 You can define additional image sizes with  the`add_image_size` function.
 
