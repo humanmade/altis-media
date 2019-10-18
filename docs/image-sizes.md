@@ -14,7 +14,7 @@ They have default dimensions, but you can override these either with code or in 
 
 A lot of times, you'll find that you need custom image sizes for different contexts, depending on your theme's design.
 
-You can define additional image sizes with  the`add_image_size` function.
+You can define custom image sizes with the `add_image_size()` function.
 
 This function accepts the following parameters:
 
