@@ -8,14 +8,22 @@ Altis provides some default image sizes, that you can use to render images in th
 - Post Thumbnail
 - Full
 
-You can set their dimensions under Settings > Media, or keep the defaults.
+They have default dimensions, but you can override these either with code or in the Admin, under Settings > Media.
 
 [screenshot of media settings]
 
 A lot of times, you'll find that you need additional image sizes for different contexts, depending on your theme's design.
 
-You can define additional image sizes with `add_image_size`.
+You can define additional image sizes with  the`add_image_size` function.
 
+This function accepts the following parameters:
+
+```php
+ * @param string     $name   Image size identifier.
+ * @param int        $width  Optional. Image width in pixels. Default 0.
+ * @param int        $height Optional. Image height in pixels. Default 0.
+ * @param bool|array $crop   Optional. Whether to crop images to specified width and height or resize.
+```
 The custom image sizes should be declared in the callback function to the `after_setup_theme` action.
 
 Example:
@@ -33,19 +41,29 @@ function theme_setup() {
 }
 ```
 
-When setting a crop position, the first value in the array is the x axis crop position, the second is the y axis crop position.
-
 This will *not* add a UI for these named sizes under Settings > Media.
 
+### Cropping
+
+Cropping behavior for the image size is dependent on the value of $crop:
+1. If false (default), images will be scaled, not cropped.
+2. If an array in the form of array( x_crop_position, y_crop_position ):
+    - x_crop_position accepts 'left' 'center', or 'right'.
+    - y_crop_position accepts 'top', 'center', or 'bottom'.
+    Images will be cropped to the specified dimensions within the defined crop area.
+ 3. If true, images will be cropped to the specified dimensions using center positions.
+ 
 You can find more info in the [WordPress developer guide](https://developer.wordpress.org/themes/functionality/featured-images-post-thumbnails/#add-custom-featured-image-sizes)
 
 ## Using The Custom Sizes
 
 Once you've defined custom image sizes, there are different ways you can use them.
 
-You can display a post thumbnail: `the_post_thumbnail( 'custom-size` )`
+You can display a post thumbnail: `the_post_thumbnail( 'custom-size` );`
 
-You can display any uploaded image by its attachment ID: `wp_get_attachment_image_src( 1 , 'custom-size' )`
+You can display any uploaded image by its attachment ID: `wp_get_attachment_image_src( 1 , 'custom-size' );`
+
+## Hooks And Filters
 
 ### `image_size_names_choose`
 
