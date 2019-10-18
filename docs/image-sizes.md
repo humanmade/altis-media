@@ -8,7 +8,7 @@ Altis provides some default image sizes, that you can use to render images in th
 - Post Thumbnail
 - Full
 
-They have default dimensions, but you can override these either with code or in the Admin, under Settings > Media.
+They have default dimensions, but you can override these either with code or in the admin, under [Settings > Media](internal://admin/options-media.php).
 
 ![Media Settings](https://user-images.githubusercontent.com/30460/67079140-8b846000-f18a-11e9-8387-038b594f19aa.png)
 
