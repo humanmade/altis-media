@@ -84,7 +84,7 @@ You can find the [full documentation for this filter here](https://developer.wor
 
 ## Dynamically Defined With A Size Array
 
-There are scenarios where you might want to define the image size via an array:
+In cases where a specific image size might only be used once you can define the image size via an array of width and height values in pixels:
 
 ```php
 $thumb_url = wp_get_attachment_image_src( $attachment_id, [ 900, 450 ], true );`
