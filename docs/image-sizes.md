@@ -10,7 +10,7 @@ Altis provides some default image sizes, that you can use to render images in th
 
 They have default dimensions, but you can override these either with code or in the Admin, under Settings > Media.
 
-![Media Settings](https://user-images.githubusercontent.com/30460/67079140-8b846000-f18a-11e9-8387-038b594f19aa.png)
+![Media Settings](./assets/media-settings.png)
 
 A lot of times, you'll find that you need additional image sizes for different contexts, depending on your theme's design.
 
@@ -37,7 +37,7 @@ function theme_setup() {
 	add_image_size( 'custom-size', 220, 180, true ); // 220 pixels wide by 180 pixels tall, hard crop mode
 	
 	// Set the image size by cropping the image and defining a crop position:
-	add_image_size( 'custom-size', 220, 220, array( 'left', 'top' ) ); // Hard crop left top
+	add_image_size( 'custom-size', 220, 220, [ 'left', 'top' ] ); // Hard crop left top
 }
 ```
 
@@ -47,7 +47,7 @@ This will *not* add a UI for these named sizes under Settings > Media.
 
 Cropping behavior for the image size is dependent on the value of $crop:
 1. If false (default), images will be scaled, not cropped.
-2. If an array in the form of array( x_crop_position, y_crop_position ):
+2. If an array in the form of [ x_crop_position, y_crop_position ]:
     - x_crop_position accepts 'left' 'center', or 'right'.
     - y_crop_position accepts 'top', 'center', or 'bottom'.
     Images will be cropped to the specified dimensions within the defined crop area.
@@ -59,9 +59,20 @@ You can find more info in the [WordPress developer guide](https://developer.word
 
 Once you've defined custom image sizes, there are different ways you can use them.
 
-You can display a post thumbnail: `the_post_thumbnail( 'custom-size` );`
+You can display a post thumbnail:
 
-You can display any uploaded image by its attachment ID: `wp_get_attachment_image_src( 1 , 'custom-size' );`
+```php
+// Output the post thumbnail image tag:
+the_post_thumbnail( 'custom-size` );
+```
+
+You can display any uploaded image by its attachment ID:
+
+```php
+$src = wp_get_attachment_image_src( $attachment_id , 'custom-size' );
+$img_url = $src[0];
+echo ( ! empty( $img_url ) ) ? $img_url : '';
+```
 
 ## Hooks And Filters
 
@@ -78,7 +89,7 @@ add_filter( 'image_size_names_choose', function ( array $sizes ) : array {
 });
 ```
 
-![Media Editor](https://user-images.githubusercontent.com/30460/67079152-93dc9b00-f18a-11e9-9797-5075210affad.png)
+![Media Editor](./assets/attachment-details.png)
 
 You can find the [full documentation for this filter here](https://developer.wordpress.org/reference/hooks/image_size_names_choose/).
 
