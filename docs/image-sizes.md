@@ -49,7 +49,7 @@ Cropping behavior for the image size is dependent on the value of `$crop`:
 1. If false (default), images will be scaled, not cropped.
 2. If an array in the form of `[ x_crop_position, y_crop_position ]`:
     - x_crop_position accepts 'left' 'center', or 'right'.
-    - y_crop_position accepts 'top', 'center', or 'bottom'.
+    - `y_crop_position` accepts 'top', 'center', or 'bottom'.
     Images will be cropped to the specified dimensions within the defined crop area.
  3. If true, images will be cropped to the specified dimensions using center positions.
  
