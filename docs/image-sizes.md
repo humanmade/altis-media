@@ -10,7 +10,7 @@ Altis provides some default image sizes, that you can use to render images in th
 
 They have default dimensions, but you can override these either with code or in the Admin, under Settings > Media.
 
-[screenshot of media settings]
+![Media Settings](https://user-images.githubusercontent.com/30460/67079140-8b846000-f18a-11e9-8387-038b594f19aa.png)
 
 A lot of times, you'll find that you need additional image sizes for different contexts, depending on your theme's design.
 
@@ -78,7 +78,7 @@ add_filter( 'image_size_names_choose', function ( array $sizes ) : array {
 });
 ```
 
-[screenshot of media popup]
+![Media Editor](https://user-images.githubusercontent.com/30460/67079152-93dc9b00-f18a-11e9-9797-5075210affad.png)
 
 You can find the [full documentation for this filter here](https://developer.wordpress.org/reference/hooks/image_size_names_choose/).
 
