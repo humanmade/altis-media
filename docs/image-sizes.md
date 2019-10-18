@@ -57,7 +57,7 @@ You can find more info in the [WordPress developer guide](https://developer.word
 
 ## Using The Custom Sizes
 
-Once you've defined custom image sizes, there are different ways you can use them.
+Once you've defined custom image sizes there are different ways you can use them.
 
 You can display a post thumbnail:
 
