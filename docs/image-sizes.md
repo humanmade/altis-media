@@ -86,7 +86,7 @@ Runs before rendering the list of available image sizes in the sidebar of the me
 add_filter( 'image_size_names_choose', function ( array $sizes ) : array {
 	$sizes['category-thumb'] = __( 'Category Thumb' );
 	return $sizes;
-});
+} );
 ```
 
 ![Media Editor](./assets/attachment-details.png)
