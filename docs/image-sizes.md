@@ -66,7 +66,7 @@ You can display a post's featured image at a given size:
 the_post_thumbnail( 'custom-size' );
 ```
 
-You can display any uploaded image by its attachment ID:
+You can also display any uploaded image by its attachment ID:
 
 ```php
 $src = wp_get_attachment_image_src( $attachment_id , 'custom-size' );
