@@ -80,7 +80,7 @@ echo ( ! empty( $img_url ) ) ? $img_url : '';
 
 This filter allows you to make your custom image sizes available for selection in the admin.
 
-Runs before rendering the list of available image sizes in the sidebar of the media edit screen. Used in conjuction with `add_image_size` 
+Runs before rendering the list of available image sizes in the sidebar of the media edit screen. Used in conjuction with `add_image_size()` 
 
 ```php
 add_filter( 'image_size_names_choose', function ( array $sizes ) : array {
