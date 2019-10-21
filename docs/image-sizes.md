@@ -37,7 +37,7 @@ function theme_setup() {
 	add_image_size( 'cropped-thumbnail', 220, 180, true ); // Exactly 220 pixels wide by 180 pixels tall
 	
 	// Set the image size by cropping the image and defining a crop position:
-	add_image_size( 'custom-size', 220, 220, [ 'left', 'top' ] ); // Hard crop left top
+	add_image_size( 'top-left-crop', 220, 220, [ 'left', 'top' ] ); // Hard crop left top
 }
 ```
 
