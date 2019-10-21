@@ -63,7 +63,7 @@ You can display a post's featured image at a given size:
 
 ```php
 // Output the post thumbnail image tag:
-the_post_thumbnail( 'custom-size` );
+the_post_thumbnail( 'custom-size' );
 ```
 
 You can display any uploaded image by its attachment ID:
