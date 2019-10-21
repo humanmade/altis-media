@@ -18,12 +18,11 @@ You can define custom image sizes with the `add_image_size()` function.
 
 This function accepts the following parameters:
 
-```php
- * @param string     $name   Image size identifier.
- * @param int        $width  Optional. Image width in pixels. Default 0.
- * @param int        $height Optional. Image height in pixels. Default 0.
- * @param bool|array $crop   Optional. Whether to crop images to specified width and height or resize.
-```
+- `string $name`: Image size identifier.
+- `int $width`:  Optional. Image width in pixels. Default 0.
+- `int $height`: Optional. Image height in pixels. Default 0.
+- `bool|array $crop`: Optional. Whether to crop images to specified width and height or resize.
+
 The custom image sizes should be declared in the callback function to the `after_setup_theme` action.
 
 Example:
