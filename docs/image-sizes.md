@@ -59,7 +59,7 @@ You can find more info in the [WordPress developer guide](https://developer.word
 
 Once you've defined custom image sizes there are different ways you can use them.
 
-You can display a post thumbnail:
+You can display a post's featured image at a given size:
 
 ```php
 // Output the post thumbnail image tag:
