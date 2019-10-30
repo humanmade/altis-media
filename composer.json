@@ -13,7 +13,7 @@
 		"php": ">=7.1",
 		"darylldoyle/safe-svg": "1.9.4",
 		"humanmade/tachyon-plugin": "0.10.2",
-		"humanmade/smart-media": "0.2.1",
+		"humanmade/smart-media": "0.2.2",
 		"humanmade/gaussholder": "1.1.3",
 		"humanmade/aws-rekognition": "0.1.6"
 	},
