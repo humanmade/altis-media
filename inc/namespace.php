@@ -30,7 +30,8 @@ function load_plugins() {
 		require_once $vendor_dir . '/humanmade/tachyon-plugin/tachyon.php';
 	}
 
-	if ( $config['smart-media'] ) {
+	// Smart Media requires Tachyon to work.
+	if ( $config['tachyon'] && $config['smart-media'] ) {
 		if ( isset( $config['smart-media']['srcset-modifiers'] ) ) {
 			add_filter( 'hm.smart-media.image-size-modifiers', function () use ( $config ) : array {
 				$modifiers = array_map( 'floatval', (array) $config['smart-media']['srcset-modifiers'] );
