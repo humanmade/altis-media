@@ -6,4 +6,4 @@
 
 # Media
 
-The Media module includes features to create, manage and server media across Altis.
+The Media module includes features to create, manage and serve media across Altis.
