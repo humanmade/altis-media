@@ -17,6 +17,9 @@ use function HM\AWS_Rekognition\get_attachment_labels;
  */
 function bootstrap() {
 	add_action( 'plugins_loaded', __NAMESPACE__ . '\\load_plugins', 1 );
+
+	// Remove AWS_Rekognition filter for performance purposes, as ElasticSearch is used instead.
+	remove_filter( 'posts_clauses', 'HM\\AWS_Rekognition\\filter_query_attachment_keywords' );
 }
 
 /**
