@@ -11,7 +11,7 @@
 	],
 	"require": {
 		"php": ">=7.1",
-		"darylldoyle/safe-svg": "1.9.6",
+		"darylldoyle/safe-svg": "1.9.9",
 		"humanmade/tachyon-plugin": "~0.11.1",
 		"humanmade/smart-media": "^0.2.7",
 		"humanmade/gaussholder": "1.1.3",
