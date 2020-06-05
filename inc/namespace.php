@@ -1,12 +1,15 @@
 <?php
+/**
+ * Altis Media.
+ *
+ * @package altis/media
+ */
 
 namespace Altis\Media;
 
+use Altis;
 use Aws\Rekognition\RekognitionClient;
-use const Altis\ROOT_DIR;
-use function Altis\get_aws_sdk;
-use function Altis\get_config;
-use function HM\AWS_Rekognition\get_attachment_labels;
+use HM\AWS_Rekognition;
 
 /**
  * Bootstrap function to set up the module.
@@ -28,8 +31,8 @@ function bootstrap() {
  * Load all the WordPress plugins that are part of the media module.
  */
 function load_plugins() {
-	$config = get_config()['modules']['media'];
-	$vendor_dir = ROOT_DIR . '/vendor';
+	$config = Altis\get_config()['modules']['media'];
+	$vendor_dir = Altis\ROOT_DIR . '/vendor';
 
 	if ( $config['tachyon'] ) {
 		require_once $vendor_dir . '/humanmade/tachyon-plugin/tachyon.php';
@@ -98,11 +101,11 @@ function get_bool_callback( bool $value ) : callable {
 /**
  * Set the image sizes that Gaussholder is applied to.
  *
- * @param array $sizes
+ * @param array $sizes Image size names.
  * @return array
  */
 function set_gaussholder_image_sizes( array $sizes ) : array {
-	$config = get_config()['modules']['media'];
+	$config = Altis\get_config()['modules']['media'];
 	$sizes = array_merge( $sizes, $config['gaussholder']['image-sizes'] );
 	return $sizes;
 }
@@ -126,19 +129,19 @@ function set_gaussholder_filter_after_tachyon() {
 /**
  * Override the AWS Rekognition Client with the one from Altis.
  *
- * @param null|RekognitionClient $client
- * @param array $params
+ * @param null|RekognitionClient $client Rekognition client or null.
+ * @param array $params Parameters to configure the Rekognition client.
  * @return RekognitionClient
  */
 function override_aws_rekognition_aws_client( $client, array $params ) : RekognitionClient {
-	return get_aws_sdk()->createRekognition( $params );
+	return Altis\get_aws_sdk()->createRekognition( $params );
 }
 
 /**
- * Add rekognition keywords to the search index
+ * Add rekognition keywords to the search index.
  *
- * @param array $post_data
- * @param integer $post_id
+ * @param array $post_data Data to be indexed in ElasticSearch.
+ * @param integer $post_id The current post ID.
  * @return array
  */
 function add_rekognition_keywords_to_search_index( array $post_data, int $post_id ) : array {
@@ -150,7 +153,7 @@ function add_rekognition_keywords_to_search_index( array $post_data, int $post_i
 
 	$post_data['alt'] = get_post_meta( $post_id, '_wp_attachment_image_alt', true );
 
-	$labels = get_attachment_labels( $post_id );
+	$labels = AWS_Rekognition\get_attachment_labels( $post_id );
 	$labels = array_filter( $labels, function ( array $label ) : bool {
 		return $label['Confidence'] > 50;
 	} );
@@ -163,9 +166,9 @@ function add_rekognition_keywords_to_search_index( array $post_data, int $post_i
 }
 
 /**
- * Add attachment field for search
+ * Add attachment field for search.
  *
- * @param $search_fields
+ * @param array $search_fields Additional fields for ElasticPress to search against.
  * @return array
  */
 function add_rekognition_keywords_to_search_fields( array $search_fields ) : array {
@@ -179,5 +182,5 @@ function add_rekognition_keywords_to_search_fields( array $search_fields ) : arr
  * Load the safe SVG upload handler.
  */
 function load_safe_svg() {
-	require_once ROOT_DIR . '/vendor/darylldoyle/safe-svg/safe-svg.php';
+	require_once Altis\ROOT_DIR . '/vendor/darylldoyle/safe-svg/safe-svg.php';
 }
