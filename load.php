@@ -1,8 +1,13 @@
 <?php
+/**
+ * Altis Media Module.
+ *
+ * @package altis/media
+ */
 
-namespace Altis\Media; // @codingStandardsIgnoreLine
+namespace Altis\Media; // phpcs:ignore
 
-use function Altis\register_module;
+use Altis;
 
 add_action( 'altis.modules.init', function () {
 	$default_settings = [
@@ -20,5 +25,5 @@ add_action( 'altis.modules.init', function () {
 			'text' => false,
 		],
 	];
-	register_module( 'media', __DIR__, 'Media', $default_settings, __NAMESPACE__ . '\\bootstrap' );
+	Altis\register_module( 'media', __DIR__, 'Media', $default_settings, __NAMESPACE__ . '\\bootstrap' );
 } );
