@@ -68,6 +68,7 @@ function load_plugins() {
 		add_filter( 'hm.aws.rekognition.client', __NAMESPACE__ . '\\override_aws_rekognition_aws_client', 10, 2 );
 		add_filter( 'ep_post_sync_args_post_prepare_meta', __NAMESPACE__ . '\\add_rekognition_keywords_to_search_index', 10, 2 );
 		add_filter( 'ep_search_fields', __NAMESPACE__ . '\\add_rekognition_keywords_to_search_fields' );
+		add_filter( 'altis.search.autosuggest_post_fields', __NAMESPACE__ . '\\add_rekognition_keywords_to_autosuggest' );
 
 		/**
 		 * Configure Rekognition features.
@@ -176,6 +177,17 @@ function add_rekognition_keywords_to_search_fields( array $search_fields ) : arr
 	$search_fields[] = 'rekognition_labels';
 
 	return $search_fields;
+}
+
+/**
+ * Add rekognition labels to autosuggest.
+ *
+ * @param array $fields The post fields to use in autosuggest results.
+ * @return array
+ */
+function add_rekognition_keywords_to_autosuggest( array $fields ) : array {
+	$fields[] = 'rekognition_labels';
+	return $fields;
 }
 
 /**
