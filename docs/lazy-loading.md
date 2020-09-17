@@ -30,7 +30,7 @@ Lazy loading is enabled on a per image size basis, so you must configure the spe
 }
 ```
 
-The keys are registered image sizes (plus `full` for the original size), with the value as the desired blur radius in pixels.
+It's important to note that _if no image sizes are configured, lazy loading will not activate._ The keys are registered image sizes (plus `full` for the original size), with the value as the desired blur radius in pixels.
 
 Be aware that for every size you add, a placeholder will be generated and stored in the database. If you have a lot of sizes, this will be a lot of data.
 
