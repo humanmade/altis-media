@@ -42,6 +42,6 @@ Be careful tuning this, as decreasing the radius too much will cause a huge amou
 
 The radius needs to be tuned to each size individually. Facebook uses about 200 bytes of data for their placeholders, but you may want higher quality placeholders. There's no ideal radius, as you simply want to balance having a useful placeholder with the extra time needed to process the data on the page.
 
-Gaussholder includes a CLI command to help you tune the radius: pick a representative attachment or image file and use wp gaussholder check-size <id_or_image> <radius>. Adjust the radius until you get to roughly 200B, then check against other attachments to ensure they're in the ballpark.
+Gaussholder includes a CLI command to help you tune the radius: pick a representative attachment or image file and use `wp gaussholder check-size <id_or_image> <radius>`. Adjust the radius until you get to roughly 200B, then check against other attachments to ensure they're in the ballpark.
 
 Note: changing the radius requires regenerating the placeholder data. Run `wp gaussholder process-all --regenerate` after changing radii or adding new sizes.
