@@ -30,7 +30,7 @@ Lazy loading is enabled on a per image size basis, so you must configure the spe
 }
 ```
 
-The keys are registered image sizes (plus `full` for the original size), with the value as the desired blur radius in pixels.
+It's important to note that _if no image sizes are configured, lazy loading will not activate._ The keys are registered image sizes (plus `full` for the original size), with the value as the desired blur radius in pixels.
 
 Be aware that for every size you add, a placeholder will be generated and stored in the database. If you have a lot of sizes, this will be a lot of data.
 
@@ -42,6 +42,6 @@ Be careful tuning this, as decreasing the radius too much will cause a huge amou
 
 The radius needs to be tuned to each size individually. Facebook uses about 200 bytes of data for their placeholders, but you may want higher quality placeholders. There's no ideal radius, as you simply want to balance having a useful placeholder with the extra time needed to process the data on the page.
 
-Gaussholder includes a CLI command to help you tune the radius: pick a representative attachment or image file and use wp gaussholder check-size <id_or_image> <radius>. Adjust the radius until you get to roughly 200B, then check against other attachments to ensure they're in the ballpark.
+Gaussholder includes a CLI command to help you tune the radius: pick a representative attachment or image file and use `wp gaussholder check-size <id_or_image> <radius>`. Adjust the radius until you get to roughly 200B, then check against other attachments to ensure they're in the ballpark.
 
 Note: changing the radius requires regenerating the placeholder data. Run `wp gaussholder process-all --regenerate` after changing radii or adding new sizes.
