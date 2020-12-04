@@ -6,10 +6,18 @@ Prior to WordPress 5.3.1 any image files uploaded with a file name like `example
 
 In order to work properly and for performance reasons Tachyon requires all images to not have dimensions as their suffix.
 
-Altis provides a migration command to rename legacy images and make the necessary database updates.
+Altis provides a migration command to rename legacy images and make the necessary database updates. The command will rename images, regnerate thumbnails and update the attachment data by default. It is _highly_ recommended to pass the `--search-replace` flag to update your post content and post meta data too.
+
+The database tables and columns the search & replace is performed on can be altered but default to only updating post content and post meta to keep the process as quick as it can be.
 
 ```
 wp media rename-images [--network] [--sites-page=<int>] [--search-replace] [--tables=<tables>] [--include-columns=<columns>]
+```
+
+Recommended usage:
+
+```
+wp media rename-images --network --search-replace --url=<primary site hostname>
 ```
 
 - `--network` if present will run the process for all sites on the network.
