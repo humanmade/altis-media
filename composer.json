@@ -24,6 +24,14 @@
 		]
 	},
 	"extra": {
-		"altis": {}
+		"altis": {
+			"install-overrides": [
+				"darylldoyle/safe-svg",
+				"humanmade/tachyon-plugin",
+				"humanmade/smart-media",
+				"humanmade/gaussholder",
+				"humanmade/aws-rekognition"
+			]
+		}
 	}
 }
