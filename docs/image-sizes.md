@@ -14,9 +14,11 @@ They have default dimensions, but you can override these either with code or in 
 
 ### `content_width`
 
-If your theme defines a content width either via the `$content_width` or `$GLOBALS['content_width]` globals, this size will _override_ the size defined on the Settings > Media page and the Large size may appear to be the "wrong" size (based on the size defined in the _global_ rather than the size in the admin) in the media modal.
+If your theme defines a content width via the `$content_width` (or `$GLOBALS['content_width]`) global, this size will _override_ the size defined on the Settings > Media page. This will result in the Large size appearing to be the "wrong" size (using the size defined in the _global_ rather than the size in the admin) in the media modal.
 
-To make sure these sizes align, set the `content_width` in the global to a large enough size that the admin setting won't override it, or don't define the `$content_width` global in your theme.
+To make sure these sizes don't come into conflict, set the `$content_width` global to a large enough size that the admin setting won't override it.
+
+The `$content_width` variable has been a recommended part of a theme's `functions.php` file since WordPress 2.6.
 
 ### Custom Image Sizes
 
