@@ -22,9 +22,7 @@ For example, if your theme had a content area that was 1000 pixels wide, you mig
 add_action( 'after_setup_theme', function () {
 	global $content_width;
 
-	if ( ! isset( $content_width ) ) {
-		$content_width = 1000;
-	}
+	$content_width = 1000;
 } );
 ```
 
