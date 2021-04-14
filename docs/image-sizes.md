@@ -12,6 +12,26 @@ They have default dimensions, but you can override these either with code or in 
 
 ![Media Settings](./assets/media-settings.png)
 
+### Content Width
+
+If your theme defines a content width via the `$content_width` (or `$GLOBALS['content_width]`) global, this size will _override_ the size defined on the Settings > Media page. This will result in the Large size appearing to be the "wrong" size (using the size defined in the _global_ rather than the size in the admin) in the media modal. This global is intended to be used as an upper limit on the width of images based on your theme's design.
+
+For example, if your theme had a content area that was 1000 pixels wide, you might set the `$content_width` global in your theme like this:
+
+```php
+add_action( 'after_setup_theme', function () {
+	global $content_width;
+
+	$content_width = 1000;
+} );
+```
+
+With this setting, in the admin, even if the Large image size on the Settings > Media page is greater than 1000, the _actual_ image size will never be larger than 1000, and this will be reflected in the media modal.
+
+The `$content_width` variable has been a recommended part of a theme's `functions.php` file since WordPress 2.6.
+
+### Custom Image Sizes
+
 A lot of times, you'll find that you need custom image sizes for different contexts, depending on your theme's design.
 
 You can define custom image sizes with the `add_image_size()` function.
