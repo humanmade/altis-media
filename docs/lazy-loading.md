@@ -48,7 +48,7 @@ Note: changing the radius requires regenerating the placeholder data. Run `wp ga
 
 ## Lazy Loading iFrames
 
-iFrames are lazy-loaded by default using the [browser-level `loading` attribute](https://html.spec.whatwg.org/multipage/iframe-embed-object.html#attr-iframe-loading). Only `iframe` tags with both `width` and `height` attributes present will be lazy-loaded to avoid a negative impact on layout shifting. oEmbeded iframe content within `the_content`, `the_excerpt` and `widget_text_content` will have the `loading="lazy"` tag added by default where the web service has provided a `width` and `height` attribute.
+Inline frames are lazy-loaded by default using the [browser-level `loading` attribute](https://html.spec.whatwg.org/multipage/iframe-embed-object.html#attr-iframe-loading). Only `<iframe>` tags with both `width` and `height` attributes present will be lazy-loaded to avoid a negative impact on layout shifting. Embedded `<iframe>` tags provided via oEmbed in content run through `the_content`, `the_excerpt` or `widget_text_content` filters will have the `loading="lazy"` attribute added by default where the web service has provided a `width` and `height` attribute.
 
 You can customize whether and how iFrames are lazy loaded using the `wp_lazy_loading_enabled` filter. For example, to disable lazy-loading of iFrames from post content entirely, you could use the following code:
 
