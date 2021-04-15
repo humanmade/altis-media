@@ -62,7 +62,7 @@ add_filter( 'wp_lazy_loading_enabled', function( $default, $tag_name, $context )
 }, 10, 3 );
 ```
 
-You can also use the `wp_iframe_tag_add_loading_attr` filter to customize a specific iFrame tag. For example, if you wanted to disable lazy-loading on iFrames from a specific provider, like YouTube, you could use the following code:
+You can also use the `wp_iframe_tag_add_loading_attr` filter to customize a specific `<iframe>` tag. For example, if you wanted to disable lazy-loading on inline frames from a specific provider, like YouTube, you could use the following code:
 
 ```php
 add_filter( 'wp_iframe_tag_add_loading_attr', function( $value, $iframe, $context ) {
