@@ -46,7 +46,7 @@ Gaussholder includes a CLI command to help you tune the radius: pick a represent
 
 Note: changing the radius requires regenerating the placeholder data. Run `wp gaussholder process-all --regenerate` after changing radii or adding new sizes.
 
-## Lazy Loading iFrames
+## Lazy Loading Inline Frames
 
 Inline frames are lazy-loaded by default using the [browser-level `loading` attribute](https://html.spec.whatwg.org/multipage/iframe-embed-object.html#attr-iframe-loading). Only `<iframe>` tags with both `width` and `height` attributes present will be lazy-loaded to avoid a negative impact on layout shifting. Embedded `<iframe>` tags provided via oEmbed in content run through `the_content`, `the_excerpt` or `widget_text_content` filters will have the `loading="lazy"` attribute added by default where the web service has provided a `width` and `height` attribute.
 
