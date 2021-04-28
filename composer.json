@@ -22,7 +22,8 @@
 	},
 	"autoload": {
 		"files": [
-			"inc/namespace.php"
+			"inc/namespace.php",
+			"inc/global_assets/namespace.php"
 		]
 	},
 	"extra": {
