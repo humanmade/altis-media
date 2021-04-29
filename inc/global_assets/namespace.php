@@ -10,6 +10,7 @@ namespace Altis\Media\Global_Assets;
 use Altis;
 use Exception;
 use WP_Admin_Bar;
+use WP_Site;
 
 /**
  * Setup global media hooks.
@@ -48,6 +49,8 @@ function bootstrap() {
 
 	// Handle media site URL changes.
 	add_action( 'updated_option_siteurl', __NAMESPACE__ . '\\handle_siteurl_update', 10, 2 );
+	add_action( 'updated_option_home', __NAMESPACE__ . '\\handle_siteurl_update', 10, 2 );
+	add_action( 'wp_update_site', __NAMESPACE__ . '\\handle_site_update' );
 
 	// Do not allow media site deletion.
 	add_filter( 'map_meta_cap', __NAMESPACE__ . '\\prevent_site_deletion', 10, 4 );
@@ -154,7 +157,7 @@ function maybe_create_site() {
 }
 
 /**
- * Handle deletion of old media site.
+ * Handle deletion of media site.
  *
  * @return void
  */
@@ -169,8 +172,10 @@ function uninitialize_media_site() {
 
 /**
  * Trim down the media site's admin menu.
+ *
+ * @return void
  */
-function admin_menu() {
+function admin_menu() : void {
 	global $menu;
 
 	if ( ! is_media_site() ) {
@@ -206,7 +211,7 @@ function admin_menu() {
  * @param WP_Admin_Bar $wp_admin_bar The menu bar control.
  * @return void
  */
-function admin_bar_menu( WP_Admin_Bar $wp_admin_bar ) {
+function admin_bar_menu( WP_Admin_Bar $wp_admin_bar ) : void {
 
 	$wp_admin_bar->remove_node( sprintf( 'blog-%d-n', get_site_option( 'global_media_site_id' ) ) );
 	$wp_admin_bar->remove_node( sprintf( 'blog-%d-c', get_site_option( 'global_media_site_id' ) ) );
@@ -255,7 +260,7 @@ function sites_list_row_actions( array $actions, int $site_id ) : array {
  *
  * @return void
  */
-function redirect_dashboard() {
+function redirect_dashboard() : void {
 	global $pagenow;
 
 	if ( ! is_media_site() ) {
@@ -275,7 +280,7 @@ function redirect_dashboard() {
  *
  * @return void
  */
-function redirect_frontend() {
+function redirect_frontend() : void {
 	if ( ! is_media_site() ) {
 		return;
 	}
@@ -297,6 +302,23 @@ function redirect_frontend() {
  */
 function handle_siteurl_update( $old_value, $value ) : void {
 	update_site_option( 'global_media_site', untrailingslashit( $value ) );
+}
+
+/**
+ * Handle updating the global media site URL when edited from the network settings.
+ *
+ * @param WP_Site $site The site object.
+ * @return void
+ */
+function handle_site_update( WP_Site $site ) : void {
+	if ( ! is_media_site( $site->id ) ) {
+		return;
+	}
+
+	// Build the new site URL as the new value isn't cached yet for get_site_url().
+	$new_site_url = set_url_scheme( sprintf( 'https://%s%s', $site->domain, $site->path ) );
+
+	update_site_option( 'global_media_site', untrailingslashit( $new_site_url ) );
 }
 
 /**
