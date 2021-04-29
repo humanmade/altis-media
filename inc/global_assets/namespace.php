@@ -9,7 +9,7 @@ namespace Altis\Media\Global_Assets;
 
 use Altis;
 use Exception;
-use WP_Site;
+use WP_Admin_Bar;
 
 /**
  * Setup global media hooks.
@@ -32,17 +32,38 @@ function bootstrap() {
 		return;
 	}
 
-	// Redirect media site dashboard to upload.php.
+	// Create the site or define the URL.
+	add_action( 'init', __NAMESPACE__ . '\\maybe_create_site' );
+
+	// Redirect media site URLs.
 	add_action( 'admin_init', __NAMESPACE__ . '\\redirect_dashboard' );
+	add_action( 'template_redirect', __NAMESPACE__ . '\\redirect_frontend' );
 
 	// Handle clean up operations.
 	add_action( 'wp_uninitialize_site', __NAMESPACE__ . '\\uninitialize_media_site' );
 
 	// Handle global media library admin customisations.
 	add_action( 'admin_menu', __NAMESPACE__ . '\\admin_menu', 1000 );
+	add_action( 'admin_bar_menu', __NAMESPACE__ . '\\admin_bar_menu', 1000 );
 
-	// Else create the site or define the URL.
-	add_action( 'init', __NAMESPACE__ . '\\maybe_create_site' );
+	// Handle media site URL changes.
+	add_action( 'updated_option_siteurl', __NAMESPACE__ . '\\handle_siteurl_update', 10, 2 );
+
+	// Do not allow media site deletion.
+	add_filter( 'map_meta_cap', __NAMESPACE__ . '\\prevent_site_deletion', 10, 4 );
+
+	// Handle network admin sites list.
+	add_filter( 'manage_sites_action_links', __NAMESPACE__ . '\\sites_list_row_actions', 10, 2 );
+}
+
+/**
+ * Returns true if the current site is the global media site.
+ *
+ * @param int|null $site_id An optional site ID to check. Defaults to the current site.
+ * @return boolean
+ */
+function is_media_site( ?int $site_id = null ) : bool {
+	return ! empty( get_site_meta( $site_id ?? get_current_blog_id(), 'is_media_site' ) );
 }
 
 /**
@@ -85,7 +106,12 @@ function maybe_create_site() {
 			throw new Exception( $media_site_error );
 		}
 
-		$media_site_id = wp_insert_site( [
+		/**
+		 * Filters the args used to create the global media site.
+		 *
+		 * @param array $media_site_args The arguments array for creating the global media site.
+		 */
+		$media_site_args = apply_filters( 'altis.media.global_site_args', [
 			'domain' => wp_parse_url( home_url(), PHP_URL_HOST ),
 			'path' => '/media/',
 			'title' => __( 'Global Media Library', 'altis' ),
@@ -94,6 +120,8 @@ function maybe_create_site() {
 				'is_media_site' => true,
 			],
 		] );
+
+		$media_site_id = wp_insert_site( $media_site_args );
 
 		if ( is_wp_error( $media_site_id ) ) {
 			/**
@@ -128,11 +156,10 @@ function maybe_create_site() {
 /**
  * Handle deletion of old media site.
  *
- * @param WP_Site $old_site The site being deleted.
  * @return void
  */
-function uninitialize_media_site( WP_Site $old_site ) {
-	if ( ! get_site_meta( $old_site->id, 'is_media_site' ) ) {
+function uninitialize_media_site() {
+	if ( ! is_media_site() ) {
 		return;
 	}
 
@@ -146,7 +173,7 @@ function uninitialize_media_site( WP_Site $old_site ) {
 function admin_menu() {
 	global $menu;
 
-	if ( ! get_site_meta( get_current_blog_id(), 'is_media_site' ) ) {
+	if ( ! is_media_site() ) {
 		return;
 	}
 
@@ -155,11 +182,72 @@ function admin_menu() {
 		'users.php',
 	];
 
+	/**
+	 * Filters the admin menu pages allowed on the Global Media Site admin menu.
+	 *
+	 * @param array $allowed_menu_pages The page slugs allowed in the global media site admin menu.
+	 */
+	$allowed_menu_pages = (array) apply_filters( 'altis.media.global_site_menu_pages', [] );
+
+	// Always allow upload.php and users.php.
+	$allowed_menu_pages[] = 'upload.php';
+	$allowed_menu_pages[] = 'users.php';
+
 	foreach ( $menu as $position => $item ) {
 		if ( ! in_array( $item[2], $allowed_menu_pages, true ) ) {
 			unset( $menu[ $position ] );
 		}
 	}
+}
+
+/**
+ * Modify the admin bar for the media site.
+ *
+ * @param WP_Admin_Bar $wp_admin_bar The menu bar control.
+ * @return void
+ */
+function admin_bar_menu( WP_Admin_Bar $wp_admin_bar ) {
+
+	$wp_admin_bar->remove_node( sprintf( 'blog-%d-n', get_site_option( 'global_media_site_id' ) ) );
+	$wp_admin_bar->remove_node( sprintf( 'blog-%d-c', get_site_option( 'global_media_site_id' ) ) );
+	$wp_admin_bar->remove_node( sprintf( 'blog-%d-v', get_site_option( 'global_media_site_id' ) ) );
+
+	if ( ! is_media_site() ) {
+		return;
+	}
+
+	// Remove content and front end related menus.
+	$wp_admin_bar->remove_menu( 'new-content' );
+	$wp_admin_bar->remove_menu( 'comments' );
+	$wp_admin_bar->remove_menu( 'comments' );
+	$wp_admin_bar->remove_node( 'view-site' );
+
+	// Add the site title in as static text.
+	$wp_admin_bar->add_menu( [
+		'id' => 'site-name',
+		'title' => get_option( 'blogname' ),
+		'href' => false,
+	] );
+}
+
+/**
+ * Filter the site row actions in network admin to prevent deletion.
+ *
+ * @param array $actions The action links array.
+ * @param integer $site_id The site ID.
+ * @return array
+ */
+function sites_list_row_actions( array $actions, int $site_id ) : array {
+	if ( ! is_media_site( $site_id ) ) {
+		return $actions;
+	}
+
+	unset( $actions['deactivate'] );
+	unset( $actions['archive'] );
+	unset( $actions['delete'] );
+	unset( $actions['visit'] );
+
+	return $actions;
 }
 
 /**
@@ -170,7 +258,7 @@ function admin_menu() {
 function redirect_dashboard() {
 	global $pagenow;
 
-	if ( ! get_site_meta( get_current_blog_id(), 'is_media_site' ) ) {
+	if ( ! is_media_site() ) {
 		return;
 	}
 
@@ -180,4 +268,54 @@ function redirect_dashboard() {
 
 	wp_safe_redirect( admin_url( '/upload.php' ) );
 	exit;
+}
+
+/**
+ * Redirect to the media library from the media site frontend.
+ *
+ * @return void
+ */
+function redirect_frontend() {
+	if ( ! is_media_site() ) {
+		return;
+	}
+
+	if ( is_admin() ) {
+		return;
+	}
+
+	wp_safe_redirect( admin_url( '/upload.php' ) );
+	exit;
+}
+
+/**
+ * Update netowrk option on site URL changes.
+ *
+ * @param string $old_value The old option value.
+ * @param string $value The new option value.
+ * @return void
+ */
+function handle_siteurl_update( $old_value, $value ) : void {
+	update_site_option( 'global_media_site', untrailingslashit( $value ) );
+}
+
+/**
+ * Prevent users deleting the global media site.
+ *
+ * @param string[] $caps Primitive capabilities required of the user.
+ * @param string $cap Capability being checked.
+ * @param int $user_id The user ID.
+ * @param array $args Adds context to the capability check, typically starting with an object ID.
+ * @return string[] Primitive capabilities required of the user.
+ */
+function prevent_site_deletion( array $caps, string $cap, int $user_id, array $args ) : array {
+	if ( $cap !== 'delete_site' ) {
+		return $caps;
+	}
+
+	if ( ! isset( $args[0] ) || intval( $args[0] ) !== (int) get_site_option( 'global_media_site_id' ) ) {
+		return $caps;
+	}
+
+	return [ 'do_not_allow' ];
 }
