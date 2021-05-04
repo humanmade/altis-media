@@ -24,6 +24,7 @@ add_action( 'altis.modules.init', function () {
 			'celebrities' => false,
 			'text' => false,
 		],
+		'global-media-library' => false,
 	];
 	Altis\register_module( 'media', __DIR__, 'Media', $default_settings, __NAMESPACE__ . '\\bootstrap' );
 } );

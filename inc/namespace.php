@@ -25,6 +25,9 @@ function bootstrap() {
 	add_action( 'plugins_loaded', function () {
 		remove_filter( 'posts_clauses', 'HM\\AWS_Rekognition\\filter_query_attachment_keywords' );
 	}, 11 );
+
+	// Set up global asset management.
+	Global_Assets\bootstrap();
 }
 
 /**
