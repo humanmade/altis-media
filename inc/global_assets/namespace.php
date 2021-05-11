@@ -9,6 +9,7 @@ namespace Altis\Media\Global_Assets;
 
 use Altis;
 use Altis\Global_Content;
+use Altis\Media;
 
 /**
  * Setup global media hooks.
@@ -18,12 +19,12 @@ use Altis\Global_Content;
 function bootstrap() {
 	$config = Altis\get_config()['modules']['media'];
 
-	add_action( 'plugins_loaded', __NAMESPACE__ . '\\load_amf', 5 );
-
-	// Load WP AMF and configure global site.
 	if ( empty( $config['global-media-library'] ) ) {
 		return;
 	}
+
+	// Load WP AMF and configure global site.
+	add_action( 'plugins_loaded', __NAMESPACE__ . '\\load_amf_wp', 5 );
 
 	// Bail if a site URL has been provided, assume it's external.
 	if ( is_string( $config['global-media-library'] ) ) {
@@ -37,26 +38,25 @@ function bootstrap() {
 }
 
 /**
- * Load Asset Mnnager Framework.
+ * Load Asset Manager Framework for WordPress.
  *
  * @return void
  */
-function load_amf() {
-	$config = Altis\get_config()['modules']['media'];
+function load_amf_wp() {
+	// Wait until post installation.
+	if ( defined( 'WP_INITIAL_INSTALL' ) && WP_INITIAL_INSTALL ) {
+		return;
+	}
 
 	// Load Asset Manager Framework.
-	require_once Altis\ROOT_DIR . '/vendor/humanmade/asset-manager-framework/plugin.php';
+	Media\load_amf();
 
-	// Load WP AMF and configure global site.
-	if ( $config['global-media-library'] ) {
-		require_once Altis\ROOT_DIR . '/vendor/humanmade/amf-wordpress/plugin.php';
-	}
+	// Load AMF WP.
+	require_once Altis\ROOT_DIR . '/vendor/humanmade/amf-wordpress/plugin.php';
 }
 
 /**
  * Create the Global Media Library site.
- *
- * @throws Exception If media site cannot be created.
  */
 function configure_site() {
 	// Wait until post installation.

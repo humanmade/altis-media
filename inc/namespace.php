@@ -199,3 +199,11 @@ function add_rekognition_keywords_to_autosuggest( array $fields ) : array {
 function load_safe_svg() {
 	require_once Altis\ROOT_DIR . '/vendor/darylldoyle/safe-svg/safe-svg.php';
 }
+
+/**
+ * Load Asset Mnnager Framework.
+ */
+function load_amf() {
+	// Load Asset Manager Framework.
+	require_once Altis\ROOT_DIR . '/vendor/humanmade/asset-manager-framework/plugin.php';
+}

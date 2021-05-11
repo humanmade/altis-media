@@ -6,7 +6,19 @@ It handles the necessary integration with WordPress (Ajax endpoints and Backbone
 
 The intention is that media provided by any external source will become a seamless part of your site's media library.
 
-AMF is included and loaded by Altis of the box.
+## Loading AMF
+
+AMF is loaded automatically when using the Global Media Library feature, however if you would like to use the framework without the global media library you can manually load it using the function `Altis\Media\load_amf()`:
+
+```php
+add_action( 'plugins_loaded', function () {
+    Altis\Media\load_amf();
+}, 9 );
+
+add_filter( 'amf/provider', function () {
+    return new CustomProvider();
+} );
+```
 
 ## Implementation
 
