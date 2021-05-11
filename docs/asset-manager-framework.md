@@ -8,7 +8,7 @@ The intention is that media provided by any external source will become a seamle
 
 ## Loading AMF
 
-AMF is loaded automatically when using the Global Media Library feature, however if you would like to use the framework without that feature you can conditionally load it in using the function `Altis\Media\load_amf()`:
+AMF is loaded automatically when using the Global Media Library feature, however if you would like to use the framework without the global media library you can manually load it using the function `Altis\Media\load_amf()`:
 
 ```php
 add_action( 'plugins_loaded', function () {
