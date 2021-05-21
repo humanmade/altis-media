@@ -24,7 +24,7 @@ function bootstrap() {
 	}
 
 	// Load WP AMF and configure global site.
-	add_action( 'plugins_loaded', __NAMESPACE__ . '\\load_amf_wp', 5 );
+	add_action( 'plugins_loaded', __NAMESPACE__ . '\\maybe_load_amf_wp', 5 );
 
 	// Bail if a site URL has been provided, assume it's external.
 	if ( is_string( $config['global-media-library'] ) ) {
@@ -40,11 +40,18 @@ function bootstrap() {
 /**
  * Load Asset Manager Framework for WordPress.
  *
+ * Will not load if WP is being installed or if the current site is the global content site.
+ *
  * @return void
  */
-function load_amf_wp() {
+function maybe_load_amf_wp() {
 	// Wait until post installation.
 	if ( defined( 'WP_INITIAL_INSTALL' ) && WP_INITIAL_INSTALL ) {
+		return;
+	}
+
+	// Don't load AMF on the global site itself.
+	if ( Global_Content\is_global_site() ) {
 		return;
 	}
 
