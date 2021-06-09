@@ -103,11 +103,12 @@ function set_global_site_provider_name( string $name ) : string {
 		return $provider_name;
 	}
 
-	$provider_name = sprintf(
-		'%s %s',
-		get_blog_option( Global_Content\get_site_id(), 'name', $name ),
-		__( 'Media' )
-	);
+	$provider_name = $name;
+
+	$site_name = get_blog_option( Global_Content\get_site_id(), 'blogname' );
+	if ( ! empty( $site_name ) ) {
+		$provider_name = sprintf( '%s %s', $site_name, __( 'Media' ) );
+	}
 
 	return $provider_name;
 }
