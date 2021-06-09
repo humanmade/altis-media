@@ -1,6 +1,6 @@
 # Asset Manager Framework
 
-The Asset Manager Framework (AMF) enables using an external provider such as a Digital Asset Manager (DAM), another WordPress website, or a central site within a Multisite installation. The [Global Media Library feature](./global-media-library.md) is built on top of this framework.
+The Asset Manager Framework (AMF) enables using external providers such as a Digital Asset Manager (DAM), another WordPress website, or a central site within a Multisite installation. The [Global Media Library feature](./global-media-library.md) is built on top of this framework.
 
 It handles the necessary integration with WordPress (Ajax endpoints and Backbone components) leaving you to focus on just the server-side API connection to your media source.
 
@@ -14,10 +14,6 @@ AMF is loaded automatically when using the Global Media Library feature, however
 add_action( 'plugins_loaded', function () {
     Altis\Media\load_amf();
 }, 9 );
-
-add_filter( 'amf/provider', function () {
-    return new CustomProvider();
-} );
 ```
 
 ## Implementation
@@ -37,10 +33,10 @@ The actual media file does not get sideloaded into WordPress - it intentionally 
 
 There are four steps needed to integrate a media provider using the Asset Manager Framework:
 
-1. Create a provider which extends the `AssetManagerFramework\Provider` class and implements its `request()` method to fetch results from your external media provider based on query arguments from the media manager.
+1. Create a provider which extends the `AssetManagerFramework\Provider` class and implements its `get_id()`, `get_name()` and `request()` methods.
 2. Process the response from the external media provider by creating an array of `AssetManagerFramework\Media` objects (or objects that extend that class) and setting values on each according to the response data.
 3. Return an `AssetManagerFramework\MediaList` object with the array of `AssetManagerFramework\Media` objects as its first parameter.
-2. Hook into the `amf/provider` filter to register your provider for use.
+2. Hook into the `amf/register_providers` action to register your provider for use.
 
 Here's a basic example of a provider which supplies images from unsplash.com:
 
@@ -48,10 +44,19 @@ Here's a basic example of a provider which supplies images from unsplash.com:
 use AssetManagerFramework\{
 	Image
 	Provider,
+    ProviderRegistry,
 	MediaList
 };
 
 class UnsplashProvider extends Provider {
+
+    public function get_id() {
+        return 'unsplash';
+    }
+
+    public function get_name() {
+        return __( 'Unsplash Media' );
+    }
 
     /**
      * Use the query arguments to request files from unsplash.com.
@@ -100,8 +105,9 @@ class UnsplashProvider extends Provider {
 
 }
 
-add_filter( 'amf/provider', function () {
-	return new UnsplashProvider();
+// Register the provider.
+add_action( 'amf/register_providers', function ( ProviderRegistry $provider_registry ) {
+	$provider_registry->register( new UnsplashProvider() );
 } );
 ```
 
@@ -109,15 +115,37 @@ For a more complete example using Unsplash see the [AMF Unsplash integration plu
 
 ### Extending Existing Providers
 
-Since you have access to the current provider instance via the `amf/provider`, you can also use it and decorate it:
+Since you have access to each provider instance during registration via the `amf/provider` filter, you can also use it and decorate it:
 
 ```php
-add_filter( 'amf/provider', function ( Provider $provider ) {
+use AssetManagerFramework\Provider;
+
+add_filter( 'amf/provider', function ( Provider $provider, string $id ) {
+    if ( $provider->get_id() !== 'unsplash' ) {
+        return $provider;
+    }
+
 	return new DecoratingProvider( $provider );
-}, 20 );
+}, 10, 2 );
 ```
 
 This is useful, for example, when you are using a third-party provider implementation and want to change certain behavior. Remember to use a priority later than the default for this filter, for example 20, so your code runs after the default filter.
+
+### `AssetManagerFramework\ProviderRegistry` Class
+
+The `ProviderRegistry` is designed to be accessed via the `amf/register_providers` action hook but provides the following methods:
+
+**`static instance() : ProviderRegistry`**
+
+Returns the registry singleton class.
+
+**`get( string $id = '' ) : Provider`**
+
+Get a provider by ID or the default provider (the first registered provider) if no ID is provided.
+
+**`register( Provider $provider )`**
+
+Registers a new provider class.
 
 ### `AssetManagerFramework\Media` Class
 
@@ -313,6 +341,10 @@ Sets the album the audio is from.
 
 Fires once AMF has been loaded and bootstrapped. Use this hook to load any custom providers or media objects.
 
+**`amf/register_providers: ProviderRegistry`**
+
+The hook to use for registering new providers receives the `ProviderRegistry` object as its parameter.
+
 **`amf/inserted_attachment: WP_Post $attachment, array $selection, array $amf_meta`**
 
 Fires when a media file is selected and downloaded for use locally. Receives 3 parameters:
@@ -325,4 +357,8 @@ Fires when a media file is selected and downloaded for use locally. Receives 3 p
 
 **`amf/provider: Provider`**
 
-Filters the AMF provider class in use. Defaults to `AssetManagerFramework\BlankProvider`.
+Filters the AMF provider class during registration. This filter receives each provider class.
+
+**`amf/script/data: array`**
+
+Filters the data passed client side to the media library integration. By default this contains an associative array with an item called `providers` that is an array of all registered providers including their ID, name and feature support.
