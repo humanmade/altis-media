@@ -35,6 +35,9 @@ function bootstrap() {
 	// Configure the global media site.
 	add_action( 'plugins_loaded', __NAMESPACE__ . '\\configure_site', 9 );
 	add_filter( 'altis.core.global_content_site_menu_pages', __NAMESPACE__ . '\\allow_media_pages' );
+
+	// Configure the WP provider name.
+	add_filter( 'amf/wordpress/provider_name', __NAMESPACE__ . '\\set_global_site_provider_name' );
 }
 
 /**
@@ -80,10 +83,33 @@ function configure_site() {
 	// If we have no site and no URL remove the WP AMF plugin hooks.
 	remove_action( 'plugins_loaded', 'AMFWordPress\\register_settings' );
 	remove_action( 'admin_init', 'AMFWordPress\\register_settings_ui' );
-	remove_filter( 'amf/provider', 'AMFWordPress\\get_provider' );
+	remove_action( 'amf/register_providers', 'AMFWordPress\\register_provider' );
 
 	// Suggest running the migrate command.
 	trigger_error( 'The Global Content Repository site does not exist yet! To use the Global Media Library feature you will need to run the `wp altis migrate` command.', E_USER_WARNING );
+}
+
+/**
+ * Filter the WordPress media provider name.
+ *
+ * @param string $name The default provider name.
+ * @return string
+ */
+function set_global_site_provider_name( string $name ) : string {
+	static $provider_name;
+
+	// Cache the value so switch_to_blog() only happens once.
+	if ( ! empty( $provider_name ) ) {
+		return $provider_name;
+	}
+
+	$provider_name = sprintf(
+		'%s %s',
+		get_blog_option( Global_Content\get_site_id(), 'name', $name ),
+		__( 'Media' )
+	);
+
+	return $provider_name;
 }
 
 /**
