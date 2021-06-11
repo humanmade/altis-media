@@ -72,6 +72,7 @@ function load_plugins() {
 		add_filter( 'ep_post_sync_args_post_prepare_meta', __NAMESPACE__ . '\\add_rekognition_keywords_to_search_index', 10, 2 );
 		add_filter( 'ep_search_fields', __NAMESPACE__ . '\\add_rekognition_keywords_to_search_fields' );
 		add_filter( 'altis.search.autosuggest_post_fields', __NAMESPACE__ . '\\add_rekognition_keywords_to_autosuggest' );
+		add_filter( 'ep_weighting_default_post_type_weights', __NAMESPACE__ . '\\add_rekognition_keywords_to_weighting_config', 10, 2 );
 
 		/**
 		 * Configure Rekognition features.
@@ -190,6 +191,30 @@ function add_rekognition_keywords_to_search_fields( array $search_fields ) : arr
  */
 function add_rekognition_keywords_to_autosuggest( array $fields ) : array {
 	$fields[] = 'rekognition_labels';
+	return $fields;
+}
+
+/**
+ * Add rekognition labels and alt text to attachment searches by default.
+ *
+ * @param array $fields The field weighting config.
+ * @param string $post_type The post type to get defaults for.
+ * @return array
+ */
+function add_rekognition_keywords_to_weighting_config( array $fields, string $post_type ) : array {
+	if ( $post_type !== 'attachment' ) {
+		return $fields;
+	}
+
+	$fields['alt'] = [
+		'enabled' => true,
+		'weight' => 1.0,
+	];
+	$fields['rekognition_labels'] = [
+		'enabled' => true,
+		'weight' => 1.0,
+	];
+
 	return $fields;
 }
 
