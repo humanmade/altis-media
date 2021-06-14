@@ -19,6 +19,11 @@ use Altis\Media;
 function bootstrap() {
 	$config = Altis\get_config()['modules']['media'];
 
+	// Configure local media provider for AMF.
+	if ( empty( $config['local-media-library'] ) && ! defined( 'AMF_ALLOW_LOCAL_MEDIA' ) ) {
+		define( 'AMF_ALLOW_LOCAL_MEDIA', false );
+	}
+
 	if ( empty( $config['global-media-library'] ) ) {
 		return;
 	}
@@ -38,6 +43,9 @@ function bootstrap() {
 
 	// Configure the WP provider name.
 	add_filter( 'amf/wordpress/provider_name', __NAMESPACE__ . '\\set_global_site_provider_name' );
+
+	// Add link to global content site.
+	add_action( 'pre-plupload-upload-ui', __NAMESPACE__ . '\\pre_upload_global_site_link' );
 }
 
 /**
@@ -123,4 +131,19 @@ function allow_media_pages( array $pages ) : array {
 	$pages[] = 'upload.php';
 	$pages[] = 'media.php';
 	return $pages;
+}
+
+/**
+ * Add a link to Global Media in the upload UI.
+ */
+function pre_upload_global_site_link() : void {
+	if ( Global_Content\is_global_site() ) {
+		return;
+	}
+
+	printf(
+		'<p><a class="components-button is-link" href="%s">%s</a></p>',
+		get_admin_url( Global_Content\get_site_id(), '/upload.php' ),
+		esc_html__( 'Switch to Global Media Library', 'altis' )
+	);
 }
