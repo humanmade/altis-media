@@ -35,3 +35,36 @@ Alternatively the media library config option can be set to any WordPress site U
 	}
 }
 ```
+
+## Disallowing Local Media
+
+Along with the Global Media Library you can optionally switch off each site's Local Media Library to force using the global library.
+
+To do so you can add the following config:
+
+```json
+{
+	"extra": {
+		"altis": {
+			"modules": {
+				"media": {
+					"local-media-library": false
+				}
+			}
+		}
+	}
+}
+```
+
+Alternatively you can also use the `amf/allow_local_media` filter to conditionally control which sites can use Local Media and which cannot.
+
+```php
+add_filter( 'amf/allow_local_media', function () : bool {
+	// Local for a custom site meta entry.
+	if ( get_site_meta( get_current_site_id(), 'allow_local_media' ) ) {
+		return true;
+	}
+
+	return false;
+} );
+```
