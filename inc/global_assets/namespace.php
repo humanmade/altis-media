@@ -220,11 +220,11 @@ function filter_media_view_strings( array $strings ) : array {
 /**
  * Handle permissions for Global Media assets.
  *
- * @param string[] $caps    Primitive capabilities required of the user.
- * @param string   $cap     Capability being checked.
- * @param int      $user_id The user ID.
- * @param array    $args    Adds context to the capability check, typically
- *                           starting with an object ID.
+ * @param string[] $caps Primitive capabilities required of the user.
+ * @param string $cap Capability being checked.
+ * @param int $user_id The user ID.
+ * @param array $args Adds context to the capability check, typically
+ *                    starting with an object ID.
  * @return string[] Primitive capabilities required of the user.
  */
 function set_permissions( array $caps, string $cap, int $user_id, array $args ) : array {
