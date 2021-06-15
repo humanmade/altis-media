@@ -10,6 +10,7 @@ namespace Altis\Media\Global_Assets;
 use Altis;
 use Altis\Global_Content;
 use Altis\Media;
+use WP_Post;
 
 /**
  * Setup global media hooks.
@@ -46,6 +47,13 @@ function bootstrap() {
 
 	// Add link to global content site.
 	add_action( 'pre-plupload-upload-ui', __NAMESPACE__ . '\\pre_upload_global_site_link' );
+
+	// Global site additions.
+	add_filter( 'media_meta', __NAMESPACE__ . '\\add_global_site_link', 20, 2 );
+	add_filter( 'media_view_strings', __NAMESPACE__ . '\\filter_media_view_strings', 10 );
+
+	// Permissions.
+	add_filter( 'map_meta_cap', __NAMESPACE__ . '\\set_permissions', 10, 4 );
 }
 
 /**
@@ -146,4 +154,102 @@ function pre_upload_global_site_link() : void {
 		get_admin_url( Global_Content\get_site_id(), '/upload.php' ),
 		esc_html__( 'Switch to Global Media Library', 'altis' )
 	);
+}
+
+/**
+ * Check if an attachment is from the global media library.
+ *
+ * @param integer $attachment_id The attachment ID to check.
+ * @return boolean
+ */
+function is_global_asset( int $attachment_id ) : bool {
+	// phpcs:ignore WordPress.WP.CapitalPDangit.Misspelled
+	return get_post_meta( $attachment_id, 'amf_provider', true ) === 'wordpress';
+}
+
+/**
+ * Add a link to the media on the global site.
+ *
+ * @param string $media_dims The HTML markup containing the media dimensions.
+ * @param WP_Post $attachment The WP_Post attachment object.
+ * @return string The HTML markup containing the media dimensions.
+ */
+function add_global_site_link( string $media_dims, WP_Post $attachment ) : string {
+	if ( Global_Content\is_global_site() ) {
+		return $media_dims;
+	}
+
+	if ( ! is_global_asset( $attachment->ID ) ) {
+		return $media_dims;
+	}
+
+	// Get global site media URL.
+	$media_id = intval( str_replace( 'amf-', '', $attachment->post_name ) );
+	$media_url = add_query_arg(
+		[ 'item' => $media_id ],
+		get_site_url( Global_Content\get_site_id(), '/wp-admin/upload.php', 'admin' )
+	);
+
+	$media_dims .= sprintf(
+		'<div class="global-library-link"><a href="%s">%s</a></div>',
+		$media_url,
+		esc_html__( 'View in Global Media Library' )
+	);
+
+	return $media_dims;
+}
+
+/**
+ * Filters the media view strings.
+ *
+ * @param string[] $strings Array of media view strings keyed by the name they'll be referenced by in JavaScript.
+ * @return string[] Array of media view strings keyed by the name they'll be referenced by in JavaScript.
+ */
+function filter_media_view_strings( array $strings ) : array {
+	if ( ! Global_Content\is_global_site() ) {
+		return $strings;
+	}
+
+	$strings['warnDelete'] = __( "You are about to permanently delete this item, but it could be in use on other sites.\nThis action cannot be undone.\n 'Cancel' to stop, 'OK' to delete.", 'altis' );
+	$strings['warnBulkDelete'] = __( "You are about to permanently delete these items, but they could be in use on other sites.\nThis action cannot be undone.\n 'Cancel' to stop, 'OK' to delete.", 'altis' );
+	$strings['warnBulkTrash'] = __( "You are about to trash these items but they could be in use on other sites.\n  'Cancel' to stop, 'OK' to delete.", 'altis' );
+
+	return $strings;
+}
+
+/**
+ * Handle permissions for Global Media assets.
+ *
+ * @param string[] $caps Primitive capabilities required of the user.
+ * @param string $cap Capability being checked.
+ * @param int $user_id The user ID.
+ * @param array $args Adds context to the capability check, typically
+ *                    starting with an object ID.
+ * @return string[] Primitive capabilities required of the user.
+ */
+function set_permissions( array $caps, string $cap, int $user_id, array $args ) : array {
+	if ( Global_Content\is_global_site() ) {
+		return $caps;
+	}
+
+	$caps_to_check = [ 'delete_post' ];
+
+	if ( ! in_array( $cap, $caps_to_check, true ) ) {
+		return $caps;
+	}
+
+	if ( empty( $args ) || ! is_int( $args[0] ) ) {
+		return $caps;
+	}
+
+	$post_id = $args[0];
+	if ( get_post_type( $post_id ) !== 'attachment' ) {
+		return $caps;
+	}
+
+	if ( ! is_global_asset( $post_id ) ) {
+		return $caps;
+	}
+
+	return [ 'do_not_allow' ];
 }
