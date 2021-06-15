@@ -232,7 +232,7 @@ function set_permissions( array $caps, string $cap, int $user_id, array $args ) 
 		return $caps;
 	}
 
-	$caps_to_check = [ 'delete_post', 'edit_post' ];
+	$caps_to_check = [ 'delete_post' ];
 
 	if ( ! in_array( $cap, $caps_to_check, true ) ) {
 		return $caps;
