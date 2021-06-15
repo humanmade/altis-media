@@ -157,6 +157,17 @@ function pre_upload_global_site_link() : void {
 }
 
 /**
+ * Check if an attachment is from the global media library.
+ *
+ * @param integer $attachment_id The attachment ID to check.
+ * @return boolean
+ */
+function is_global_asset( int $attachment_id ) : bool {
+	// phpcs:ignore WordPress.WP.CapitalPDangit.Misspelled
+	return get_post_meta( $attachment_id, 'amf_provider', true ) === 'wordpress';
+}
+
+/**
  * Add a link to the media on the global site.
  *
  * @param string $media_dims The HTML markup containing the media dimensions.
@@ -168,7 +179,7 @@ function add_global_site_link( string $media_dims, WP_Post $attachment ) : strin
 		return $media_dims;
 	}
 
-	if ( get_post_meta( $attachment->ID, 'amf_provider', true ) !== 'wordpress' ) {
+	if ( ! is_global_asset( $attachment->ID ) ) {
 		return $media_dims;
 	}
 
@@ -236,8 +247,7 @@ function set_permissions( array $caps, string $cap, int $user_id, array $args ) 
 		return $caps;
 	}
 
-	// Check it's from our global media provider.
-	if ( get_post_meta( $post_id, 'amf_provider', true ) !== 'wordpress' ) {
+	if ( ! is_global_asset( $post_id ) ) {
 		return $caps;
 	}
 
