@@ -50,6 +50,8 @@ function load_plugins() {
 				return $modifiers;
 			}, 9 );
 		}
+		// Avoid processing external attachments.
+		add_filter( 'hm.smart-media.skip-attachment', __NAMESPACE__ . '\\maybe_skip_smart_media', 10, 2 );
 		require_once $vendor_dir . '/humanmade/smart-media/plugin.php';
 	}
 
@@ -231,4 +233,19 @@ function load_safe_svg() {
 function load_amf() {
 	// Load Asset Manager Framework.
 	require_once Altis\ROOT_DIR . '/vendor/humanmade/asset-manager-framework/plugin.php';
+}
+
+/**
+ * Check whether we should skip Smart Media processing for this image.
+ *
+ * @param boolean $skip Set to true to skip processing.
+ * @param integer $attachment_id The attachment ID to check.
+ * @return boolean
+ */
+function maybe_skip_smart_media( bool $skip, int $attachment_id ) : bool {
+	if ( ! empty( get_post_meta( $attachment_id, 'amf_provider', true ) ) ) {
+		return true;
+	}
+
+	return $skip;
 }
