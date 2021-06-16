@@ -10,6 +10,8 @@ namespace Altis\Media\Global_Assets;
 use Altis;
 use Altis\Global_Content;
 use Altis\Media;
+use AMFWordPress\Factory;
+use AssetManagerFramework\Provider;
 use WP_Post;
 
 /**
@@ -36,6 +38,11 @@ function bootstrap() {
 	if ( is_string( $config['global-media-library'] ) ) {
 		define( 'AMF_WORDPRESS_URL', $config['global-media-library'] );
 		return;
+	}
+
+	// Use Tachyon Provider.
+	if ( $config['tachyon'] ) {
+		add_filter( 'amf/provider', __NAMESPACE__ . '\\use_tachyon_provider' );
 	}
 
 	// Configure the global media site.
@@ -79,6 +86,21 @@ function maybe_load_amf_wp() {
 
 	// Load AMF WP.
 	require_once Altis\ROOT_DIR . '/vendor/humanmade/amf-wordpress/plugin.php';
+}
+
+/**
+ * Overrride the WordPress AMF Provider.
+ *
+ * @param Provider $provider The registered provider.
+ * @return Provider
+ */
+function use_tachyon_provider( Provider $provider ) : Provider {
+	// phpcs:ignore WordPress.WP.CapitalPDangit.Misspelled
+	if ( $provider->get_id() !== 'wordpress' ) {
+		return $provider;
+	}
+
+	return new Tachyon_Provider( new Factory() );
 }
 
 /**
@@ -164,7 +186,7 @@ function pre_upload_global_site_link() : void {
  */
 function is_global_asset( int $attachment_id ) : bool {
 	// phpcs:ignore WordPress.WP.CapitalPDangit.Misspelled
-	return get_post_meta( $attachment_id, 'amf_provider', true ) === 'wordpress';
+	return get_post_meta( $attachment_id, '_amf_provider', true ) === 'wordpress';
 }
 
 /**

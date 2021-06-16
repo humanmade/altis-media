@@ -21,6 +21,9 @@
 		"humanmade/amf-wordpress": "^0.2.0"
 	},
 	"autoload": {
+		"classmap": [
+			"inc/"
+		],
 		"files": [
 			"inc/namespace.php",
 			"inc/global_assets/namespace.php"
