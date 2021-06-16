@@ -33,6 +33,7 @@ class Tachyon_Provider extends Provider implements Resizable {
 
 		$tachyon_args = [
 			$method => "{$width},{$height}",
+			'quality' => 100,
 		];
 
 		// If crop is true.
@@ -97,7 +98,7 @@ class Tachyon_Provider extends Provider implements Resizable {
 
 			return [ 'crop' => sprintf( '%dpx,%dpx,%dpx,%dpx', $crop['x'], $crop['y'], $crop['width'], $crop['height'] ) ];
 		} else {
-			return [ 'crop_stategy' => 'smart' ];
+			return [ 'crop_strategy' => 'smart' ];
 		}
 	}
 
