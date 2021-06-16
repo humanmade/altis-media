@@ -108,25 +108,10 @@ function configure_site() {
 /**
  * Filter the WordPress media provider name.
  *
- * @param string $name The default provider name.
  * @return string
  */
-function set_global_site_provider_name( string $name ) : string {
-	static $provider_name;
-
-	// Cache the value so switch_to_blog() only happens once.
-	if ( ! empty( $provider_name ) ) {
-		return $provider_name;
-	}
-
-	$provider_name = $name;
-
-	$site_name = get_blog_option( Global_Content\get_site_id(), 'blogname' );
-	if ( ! empty( $site_name ) ) {
-		$provider_name = sprintf( '%s %s', $site_name, __( 'Media' ) );
-	}
-
-	return $provider_name;
+function set_global_site_provider_name() : string {
+	return __( 'Global Media Library', 'altis' );
 }
 
 /**
@@ -170,17 +155,17 @@ function is_global_asset( int $attachment_id ) : bool {
 /**
  * Add a link to the media on the global site.
  *
- * @param string $media_dims The HTML markup containing the media dimensions.
+ * @param string $media_meta_html The HTML markup containing the media dimensions.
  * @param WP_Post $attachment The WP_Post attachment object.
  * @return string The HTML markup containing the media dimensions.
  */
-function add_global_site_link( string $media_dims, WP_Post $attachment ) : string {
+function add_global_site_link( string $media_meta_html, WP_Post $attachment ) : string {
 	if ( Global_Content\is_global_site() ) {
-		return $media_dims;
+		return $media_meta_html;
 	}
 
 	if ( ! is_global_asset( $attachment->ID ) ) {
-		return $media_dims;
+		return $media_meta_html;
 	}
 
 	// Get global site media URL.
@@ -190,13 +175,13 @@ function add_global_site_link( string $media_dims, WP_Post $attachment ) : strin
 		get_site_url( Global_Content\get_site_id(), '/wp-admin/upload.php', 'admin' )
 	);
 
-	$media_dims .= sprintf(
+	$media_meta_html .= sprintf(
 		'<div class="global-library-link"><a href="%s">%s</a></div>',
 		$media_url,
 		esc_html__( 'View in Global Media Library' )
 	);
 
-	return $media_dims;
+	return $media_meta_html;
 }
 
 /**
