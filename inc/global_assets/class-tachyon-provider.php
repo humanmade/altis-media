@@ -8,13 +8,13 @@
 namespace Altis\Media\Global_Assets;
 
 use AMFWordPress\Provider;
-use AssetManagerFramework\Resizable;
+use AssetManagerFramework\Interfaces\Resize;
 use WP_Post;
 
 /**
  * Tachyon extension for the AMF WordPress provider.
  */
-class Tachyon_Provider extends Provider implements Resizable {
+class Tachyon_Provider extends Provider implements Resize {
 
 	/**
 	 * Handles resizing of an AMF WordPress attachment.
@@ -33,7 +33,6 @@ class Tachyon_Provider extends Provider implements Resizable {
 
 		$tachyon_args = [
 			$method => "{$width},{$height}",
-			'quality' => 100,
 		];
 
 		// If crop is true.
