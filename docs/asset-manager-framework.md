@@ -42,9 +42,9 @@ Here's a basic example of a provider which supplies images from unsplash.com:
 
 ```php
 use AssetManagerFramework\Image;
+use AssetManagerFramework\MediaList;
 use AssetManagerFramework\Provider;
 use AssetManagerFramework\ProviderRegistry;
-use AssetManagerFramework\MediaList;
 
 class UnsplashProvider extends Provider {
 
