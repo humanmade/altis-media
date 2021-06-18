@@ -113,19 +113,58 @@ add_action( 'amf/register_providers', function ( ProviderRegistry $provider_regi
 
 For a more complete example using Unsplash see the [AMF Unsplash integration plugin](https://github.com/humanmade/amf-unsplash) for reference.
 
-### Extending Existing Providers
+### Dynamic Image Resizing
 
-Since you have access to each provider instance during registration via the `amf/provider` filter, you can also use it and decorate it:
+AMF provides an interface to enable dynamic image resizing for your provider classes. The Global Media Library uses this to deliver assets via Tachyon out of the box.
+
+To make a provider that can resize assets on the fly it needs to implement the `Resize` interface:
+
+```php
+use UnsplashProvider;
+use AssetManagerFramework\Interfaces\{
+    Resize
+};
+
+class ResizingUnsplashProvider extends UnsplashProvider implements Resize {
+
+    public function resize( WP_Post $attachment, int $width, int $height, $crop = false ) : string {
+
+        $base_url = wp_get_attachment_url( $attachment->ID );
+
+        $query_args = [
+            'w' => $width,
+            'h' => $height,
+            'fit' => $crop ? 'crop' : 'clip',
+            'crop' => 'faces,focalpoint',
+        ];
+
+        if ( is_array( $crop ) ) {
+            $crop = array_filter( $crop, function ( $value ) {
+                return $value !== 'center';
+            } );
+            $query_args['crop'] = implode( ',', $crop );
+        }
+
+        return add_query_args( urlencode_deep( $query_args ), $base_url );
+    }
+
+}
+```
+
+### Modifying Existing Providers
+
+Since you have access to each provider instance during registration via the `amf/provider` filter, you can also use it and decorate it, replace it with a subclass of a specific provider or replace it entirely:
 
 ```php
 use AssetManagerFramework\Provider;
+use ResizingUnsplashProvider;
 
 add_filter( 'amf/provider', function ( Provider $provider, string $id ) {
     if ( $provider->get_id() !== 'unsplash' ) {
         return $provider;
     }
 
-	return new DecoratingProvider( $provider );
+	return new ResizingUnsplashProvider();
 }, 10, 2 );
 ```
 
