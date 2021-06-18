@@ -41,12 +41,10 @@ There are four steps needed to integrate a media provider using the Asset Manage
 Here's a basic example of a provider which supplies images from unsplash.com:
 
 ```php
-use AssetManagerFramework\{
-	Image
-	Provider,
-    ProviderRegistry,
-	MediaList
-};
+use AssetManagerFramework\Image;
+use AssetManagerFramework\Provider;
+use AssetManagerFramework\ProviderRegistry;
+use AssetManagerFramework\MediaList;
 
 class UnsplashProvider extends Provider {
 
@@ -121,9 +119,7 @@ To make a provider that can resize assets on the fly it needs to implement the `
 
 ```php
 use UnsplashProvider;
-use AssetManagerFramework\Interfaces\{
-    Resize
-};
+use AssetManagerFramework\Interfaces\Resize;
 
 class ResizingUnsplashProvider extends UnsplashProvider implements Resize {
 
