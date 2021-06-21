@@ -243,7 +243,7 @@ function load_amf() {
  * @return boolean
  */
 function maybe_skip_smart_media( bool $skip, int $attachment_id ) : bool {
-	if ( ! empty( get_post_meta( $attachment_id, 'amf_provider', true ) ) ) {
+	if ( ! empty( get_post_meta( $attachment_id, '_amf_provider', true ) ) ) {
 		return true;
 	}
 
