@@ -15,7 +15,7 @@
 		"humanmade/tachyon-plugin": "~0.11.4",
 		"humanmade/smart-media": "~0.3.0",
 		"humanmade/gaussholder": "1.1.3",
-		"humanmade/aws-rekognition": "~0.1.7"
+		"humanmade/aws-rekognition": "~0.1.8"
 	},
 	"autoload": {
 		"files": [
