@@ -14,6 +14,9 @@ use AMFWordPress\Factory;
 use AssetManagerFramework\Provider;
 use WP_Post;
 
+use function Altis\Security\Network_Tokens\create_network_token;
+use function Altis\Security\Network_Tokens\verify_network_token;
+
 /**
  * Setup global media hooks.
  *
@@ -61,6 +64,10 @@ function bootstrap() {
 
 	// Permissions.
 	add_filter( 'map_meta_cap', __NAMESPACE__ . '\\set_permissions', 10, 4 );
+
+	// Allow read access to all network users.
+	add_filter( 'amf/wordpress/request_args', __NAMESPACE__ . '\\noncify_global_assets_requests' );
+	add_filter( 'user_has_cap', __NAMESPACE__ . '\\allow_global_assets_read_access', 10, 2 );
 }
 
 /**
@@ -259,4 +266,53 @@ function set_permissions( array $caps, string $cap, int $user_id, array $args ) 
 	}
 
 	return [ 'do_not_allow' ];
+}
+
+/**
+ * Add network-wide tokens/nonces to global assets requests.
+ *
+ * This helps connecting private global content site from within the same network.
+ *
+ * @param array $args HTTP Request arguments.
+ *
+ * @filters amf/wordpress/request_args
+ *
+ * @return array
+ */
+function noncify_global_assets_requests( array $args ) : array {
+	if ( ! Global_Content\is_global_site() ) {
+		$args['headers']['X-ALTIS-NETWORK-TOKEN'] = create_network_token( 'global-media-request' );
+	}
+
+	return $args;
+}
+
+/**
+ * Checks for network-wide tokens/nonces within the global content site, to allow unauthenticated internal
+ * requests to the REST API without having to login.
+ *
+ * @param array $allcaps
+ * @param array $caps
+ *
+ * @filters user_has_cap
+ *
+ * @return array
+ */
+function allow_global_assets_read_access( array $allcaps, array $caps ) : array {
+	$token = $_SERVER['HTTP_X_ALTIS_NETWORK_TOKEN'] ?? null;
+
+	if (
+		! $token
+		|| $caps !== [ 'read' ]
+		|| is_user_logged_in()
+		|| ! Global_Content\is_global_site()
+	) {
+		return $allcaps;
+	}
+
+	if ( verify_network_token( $token, 'global-media-request' ) ) {
+		$allcaps['read'] = true;
+	}
+
+	return $allcaps;
 }
