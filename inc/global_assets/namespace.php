@@ -12,10 +12,11 @@ use Altis\Global_Content;
 use Altis\Media;
 use AMFWordPress\Factory;
 use AssetManagerFramework\Provider;
-use WP_Post;
 
 use function Altis\Security\Network_Tokens\create_network_token;
 use function Altis\Security\Network_Tokens\verify_network_token;
+
+use WP_Post;
 
 /**
  * Setup global media hooks.
@@ -291,24 +292,24 @@ function noncify_global_assets_requests( array $args ) : array {
  * Checks for network-wide tokens/nonces within the global content site, to allow unauthenticated internal
  * requests to the REST API without having to login.
  *
- * @param array $allcaps
- * @param array $caps
+ * @param array $allcaps All user caps.
+ * @param array $caps Caps to check for.
  *
  * @filters user_has_cap
  *
  * @return array
  */
 function allow_global_assets_read_access( array $allcaps, array $caps ) : array {
-	$token = $_SERVER['HTTP_X_ALTIS_NETWORK_TOKEN'] ?? null;
-
 	if (
-		! $token
+		empty( $_SERVER['HTTP_X_ALTIS_NETWORK_TOKEN'] )
 		|| $caps !== [ 'read' ]
 		|| is_user_logged_in()
 		|| ! Global_Content\is_global_site()
 	) {
 		return $allcaps;
 	}
+
+	$token = sanitize_key( $_SERVER['HTTP_X_ALTIS_NETWORK_TOKEN'] );
 
 	if ( verify_network_token( $token, 'global-media-request' ) ) {
 		$allcaps['read'] = true;
