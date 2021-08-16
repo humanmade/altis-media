@@ -12,6 +12,7 @@ use Altis\Global_Content;
 use Altis\Media;
 use AMFWordPress\Factory;
 use AssetManagerFramework\Provider;
+use WP_Application_Passwords;
 use WP_Post;
 
 /**
@@ -61,6 +62,59 @@ function bootstrap() {
 
 	// Permissions.
 	add_filter( 'map_meta_cap', __NAMESPACE__ . '\\set_permissions', 10, 4 );
+
+	add_filter( 'http_request_args', __NAMESPACE__ . '\\filter_http_request_args', 10, 2 );
+}
+
+/**
+ * Filters the arguments used in an HTTP request.
+ *
+ * @param array  $parsed_args An array of HTTP request arguments.
+ * @param string $url         The request URL.
+ * @return array An array of HTTP request arguments.
+ */
+function filter_http_request_args( array $parsed_args, string $url ) : array {
+	if ( ! is_user_logged_in() || ! current_user_can( 'upload_files' ) ) {
+		return $parsed_args;
+	}
+
+	$user = wp_get_current_user();
+
+	if ( ! wp_is_application_passwords_available_for_user( $user->ID ) ) {
+		return $parsed_args;
+	}
+
+	if ( strpos( $url, rtrim( Global_Content\get_site_url(), '/' ) . '/wp-json/wp/v2/media' ) !== 0 ) {
+		return $parsed_args;
+	}
+
+	// Ensure user has credentials on the Global Repo Site.
+	if ( ! is_user_member_of_blog( $user->ID, Global_Content\get_site_id() ) ) {
+		add_user_to_blog( Global_Content\get_site_id(), $user->ID, 'subscriber' );
+	}
+
+	// Add WP Nonce authentication.
+	if ( ! isset( $parsed_args['headers']['authorization'] ) ) {
+		// Create or get application password.
+		if ( WP_Application_Passwords::application_name_exists_for_user( $user->ID, 'Global Content Repository' ) ) {
+			foreach ( WP_Application_Passwords::get_user_application_passwords( $user->ID ) as $password ) {
+				if ( $password['name'] === 'Global Content Repository' ) {
+					WP_Application_Passwords::delete_application_password( $user->ID, $password['uuid'] );
+				}
+			}
+		}
+
+		[ $app_password, $item ] = WP_Application_Passwords::create_new_application_password( $user->ID, [
+			'name' => 'Global Content Repository',
+		] );
+
+		$parsed_args['headers']['authorization'] = sprintf(
+			'Basic %s',
+			base64_encode( $user->user_login . ':' . WP_Application_Passwords::chunk_password( $app_password ) )
+		);
+	}
+
+	return $parsed_args;
 }
 
 /**
