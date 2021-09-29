@@ -35,7 +35,7 @@ There are four steps needed to integrate a media provider using the Asset Manage
 
 1. Create a provider which extends the `AssetManagerFramework\Provider` class and implements its `get_id()`, `get_name()` and `request()` methods.
 2. Process the response from the external media provider by creating an array of `AssetManagerFramework\Media` objects (or objects that extend that class) and setting values on each according to the response data.
-3. Return an `AssetManagerFramework\MediaList` object with the array of `AssetManagerFramework\Media` objects as its first parameter.
+3. Return a new `AssetManagerFramework\MediaResponse` object. The `MediaResponse` object takes a `MediaList` (with the array of `AssetManagerFramework\Media` objects as its first parameter), the total number of items available, and the number of items requested per page.
 2. Hook into the `amf/register_providers` action to register your provider for use.
 
 Here's a basic example of a provider which supplies images from unsplash.com:
@@ -43,6 +43,7 @@ Here's a basic example of a provider which supplies images from unsplash.com:
 ```php
 use AssetManagerFramework\Image;
 use AssetManagerFramework\MediaList;
+use AssetManagerFramework\MediaResponse;
 use AssetManagerFramework\Provider;
 use AssetManagerFramework\ProviderRegistry;
 
@@ -60,9 +61,9 @@ class UnsplashProvider extends Provider {
      * Use the query arguments to request files from unsplash.com.
      *
      * @param array $args The WP_Query args array.
-     * @return MediaList
+     * @return MediaResponse
      */
-	protected function request( array $args ) : MediaList {
+	protected function request( array $args ) : MediaResponse {
 
         $url = 'https://api.unsplash.com/photos';
 
@@ -98,8 +99,12 @@ class UnsplashProvider extends Provider {
             $items[] = $item;
         }
 
-		return new MediaList( ...$items );
-	}
+        return new MediaResponse(
+            new MediaList( ...$items ),
+            wp_remote_retrieve_header( $response, 'x-total' ), // Total available.
+            wp_remote_retrieve_header( $response, 'x-per-page' ) // Items per page.
+        );
+    }
 
 }
 
@@ -110,6 +115,8 @@ add_action( 'amf/register_providers', function ( ProviderRegistry $provider_regi
 ```
 
 For a more complete example using Unsplash see the [AMF Unsplash integration plugin](https://github.com/humanmade/amf-unsplash) for reference.
+
+Depending on the API you are querying the way to find the total number of items available may vary, typically they are provided in query response headers.
 
 ### Dynamic Image Resizing
 
@@ -182,6 +189,21 @@ Get a provider by ID or the default provider (the first registered provider) if 
 
 Registers a new provider class.
 
+### `AssetManagerFramework\MediaResponse( MediaList $items, int $total = 0, int $per_page = 40 )` Class
+
+The `MediaResponse` class ensures that the media library can correctly provide paginated results. You should derive the values for the total number of items available and the items requested per page from any remote requests made in your `Provider`'s `request` method.
+
+**`get_items() : MediaList`**
+
+Returns the `MediaList` set in the constructor.
+
+**`get_total() : int`**
+
+Returns the total number of available items set via the constructor. Used internally to set response headers.
+
+**`get_total_pages() : int`**
+
+Returns the total number of pages available to paginate through. Used internally to set response headers.
 ### `AssetManagerFramework\Media` Class
 
 The `Media` object is important as it allows you easily map data from any API to data that Altis can understand and use. It is recommended to set as much data as possible given the API responses.
