@@ -27,5 +27,8 @@ add_action( 'altis.modules.init', function () {
 		'global-media-library' => false,
 		'local-media-library' => true,
 	];
-	Altis\register_module( 'media', __DIR__, 'Media', $default_settings, __NAMESPACE__ . '\\bootstrap' );
+	$options = [
+		'defaults' => $default_settings,
+	];
+	Altis\register_module( 'media', __DIR__, 'Media', $options, __NAMESPACE__ . '\\bootstrap' );
 } );
