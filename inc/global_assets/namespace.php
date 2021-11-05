@@ -72,7 +72,7 @@ function bootstrap() {
  */
 function maybe_load_amf_wp() {
 	// Wait until post installation.
-	if ( defined( 'WP_INITIAL_INSTALL' ) && WP_INITIAL_INSTALL ) {
+	if ( defined( 'WP_INSTALLING' ) && WP_INSTALLING ) {
 		return;
 	}
 
@@ -108,7 +108,7 @@ function use_tachyon_provider( Provider $provider ) : Provider {
  */
 function configure_site() {
 	// Wait until post installation.
-	if ( defined( 'WP_INITIAL_INSTALL' ) && WP_INITIAL_INSTALL ) {
+	if ( defined( 'WP_INSTALLING' ) && WP_INSTALLING ) {
 		return;
 	}
 
