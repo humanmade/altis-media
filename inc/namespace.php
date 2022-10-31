@@ -30,7 +30,6 @@ function bootstrap() {
 
 	// Set up global asset management.
 	Global_Assets\bootstrap();
-
 }
 
 /**
