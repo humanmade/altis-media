@@ -26,7 +26,8 @@ function bootstrap() {
 		remove_filter( 'posts_clauses', 'HM\\AWS_Rekognition\\filter_query_attachment_keywords' );
 	}, 11 );
 
-	add_action( 'wp_enqueue_scripts', __NAMESPACE__ . '\\enqueue_assets' );
+	// Load scripts early with the analytics scripts and at as lower priority.
+	add_action( 'altis.analytics.enqueue_scripts', __NAMESPACE__ . '\\enqueue_assets', 20 );
 
 	// Set up global asset management.
 	Global_Assets\bootstrap();
@@ -98,17 +99,25 @@ function load_plugins() {
 }
 
 /**
- * Enqueue media module assets.
+ * Enqueue media module assets with altis-experiments.
  *
  * @return void
  */
 function enqueue_assets() {
-	wp_enqueue_script(
-		__NAMESPACE__,
-		plugin_dir_url( __DIR__ ) . 'assets/scripts.js',
-		[],
-		null
-	);
+	$config = Altis\get_config()['modules']['media'];
+
+	if ( $config['gaussholder'] ) {
+		wp_add_inline_script(
+			'altis-experiments',
+			sprintf(
+				'window.addEventListener( \'altisBlockContentChanged\', function () {' .
+					'if ( window.GaussHolder ) {' .
+						'window.GaussHolder();' .
+					'}' .
+				'} );'
+			)
+		);
+	}
 }
 
 /**
