@@ -26,8 +26,11 @@ function bootstrap() {
 		remove_filter( 'posts_clauses', 'HM\\AWS_Rekognition\\filter_query_attachment_keywords' );
 	}, 11 );
 
+	add_action( 'wp_enqueue_scripts', __NAMESPACE__ . '\\enqueue_assets' );
+
 	// Set up global asset management.
 	Global_Assets\bootstrap();
+
 }
 
 /**
@@ -91,8 +94,23 @@ function load_plugins() {
 		require_once $vendor_dir . '/humanmade/aws-rekognition/plugin.php';
 	}
 
+
 	// Load Safe SVG.
 	add_action( 'plugins_loaded', __NAMESPACE__ . '\\load_safe_svg', 9 );
+}
+
+/**
+ * Enqueue media module assets.
+ *
+ * @return void
+ */
+function enqueue_assets() {
+	wp_enqueue_script(
+		__NAMESPACE__,
+		plugin_dir_url( __DIR__ ) . 'assets/scripts.js',
+		[],
+		null
+	);
 }
 
 /**
