@@ -26,6 +26,9 @@ function bootstrap() {
 		remove_filter( 'posts_clauses', 'HM\\AWS_Rekognition\\filter_query_attachment_keywords' );
 	}, 11 );
 
+	// Load scripts early with the analytics scripts and at as lower priority.
+	add_action( 'altis.analytics.enqueue_scripts', __NAMESPACE__ . '\\enqueue_assets', 20 );
+
 	// Set up global asset management.
 	Global_Assets\bootstrap();
 }
@@ -93,6 +96,28 @@ function load_plugins() {
 
 	// Load Safe SVG.
 	add_action( 'plugins_loaded', __NAMESPACE__ . '\\load_safe_svg', 9 );
+}
+
+/**
+ * Enqueue media module assets with altis-experiments.
+ *
+ * @return void
+ */
+function enqueue_assets() {
+	$config = Altis\get_config()['modules']['media'];
+
+	if ( $config['gaussholder'] ) {
+		wp_add_inline_script(
+			'altis-experiments',
+			sprintf(
+				'window.addEventListener( \'altisBlockContentChanged\', function () {' .
+					'if ( window.GaussHolder ) {' .
+						'window.GaussHolder();' .
+					'}' .
+				'} );'
+			)
+		);
+	}
 }
 
 /**
