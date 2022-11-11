@@ -250,6 +250,25 @@ function add_rekognition_keywords_to_weighting_config( array $fields, string $po
  */
 function load_safe_svg() {
 	require_once Altis\ROOT_DIR . '/vendor/darylldoyle/safe-svg/safe-svg.php';
+
+	// Forgive me for what I'm about to do :( There's no global handle on safe_svg::one_pixel_fix's filter,
+	// so we have to get it from the wp_filter hook array directly and remove it that way.
+	//
+	// This is removed because safe_svg::one_pixel_fix() will remote fetch teh SVG from S3 on every call to
+	// wp_get_attachment_image_src() on an SVG attachment, which will slow things down a lot.
+	global $wp_filter;
+	if ( ! isset( $wp_filter['wp_get_attachment_image_src'] ) ) {
+		return;
+	}
+	$filter = $wp_filter['wp_get_attachment_image_src'];
+	foreach ( $filter->callbacks as $priority => $callbacks ) {
+		foreach ( $callbacks as $callback ) {
+			if ( is_array( $callback['function'] ) && $callback['function'][0] instanceof \safe_svg && $callback['function'][1] === 'one_pixel_fix' ) {
+				remove_filter( 'wp_get_attachment_image_src', $callback['function'], $priority );
+				break( 2 );
+			}
+		}
+	}
 }
 
 /**
