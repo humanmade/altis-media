@@ -26,9 +26,6 @@ function bootstrap() {
 		remove_filter( 'posts_clauses', 'HM\\AWS_Rekognition\\filter_query_attachment_keywords' );
 	}, 11 );
 
-	// Load scripts early with the analytics scripts and at as lower priority.
-	add_action( 'altis.analytics.enqueue_scripts', __NAMESPACE__ . '\\enqueue_assets', 20 );
-
 	// Set up global asset management.
 	Global_Assets\bootstrap();
 }
@@ -56,16 +53,6 @@ function load_plugins() {
 		// Avoid processing external attachments.
 		add_filter( 'hm.smart-media.skip-attachment', __NAMESPACE__ . '\\maybe_skip_smart_media', 10, 2 );
 		require_once $vendor_dir . '/humanmade/smart-media/plugin.php';
-	}
-
-	if ( $config['gaussholder'] ) {
-		if ( ! empty( $config['gaussholder']['image-sizes'] ) ) {
-			add_filter( 'gaussholder.image_sizes', __NAMESPACE__ . '\\set_gaussholder_image_sizes' );
-		}
-		require_once $vendor_dir . '/humanmade/gaussholder/gaussholder.php';
-		if ( $config['tachyon'] ) {
-			add_action( 'plugins_loaded', __NAMESPACE__ . '\\set_gaussholder_filter_after_tachyon', 11 );
-		}
 	}
 
 	if ( $config['rekognition'] ) {
@@ -99,28 +86,6 @@ function load_plugins() {
 }
 
 /**
- * Enqueue media module assets with altis-experiments.
- *
- * @return void
- */
-function enqueue_assets() {
-	$config = Altis\get_config()['modules']['media'];
-
-	if ( $config['gaussholder'] ) {
-		wp_add_inline_script(
-			'altis-experiments',
-			sprintf(
-				'window.addEventListener( \'altisBlockContentChanged\', function () {' .
-					'if ( window.GaussHolder ) {' .
-						'window.GaussHolder();' .
-					'}' .
-				'} );'
-			)
-		);
-	}
-}
-
-/**
  * Returns a callable that return true or false.
  *
  * @param boolean $value The value to check.
@@ -128,34 +93,6 @@ function enqueue_assets() {
  */
 function get_bool_callback( bool $value ) : callable {
 	return $value ? '__return_true' : '__return_false';
-}
-
-/**
- * Set the image sizes that Gaussholder is applied to.
- *
- * @param array $sizes Image size names.
- * @return array
- */
-function set_gaussholder_image_sizes( array $sizes ) : array {
-	$config = Altis\get_config()['modules']['media'];
-	$sizes = array_merge( $sizes, $config['gaussholder']['image-sizes'] );
-	return $sizes;
-}
-
-/**
- * Re-order the Gaussholder content filter after Tachyon.
- *
- * Because Gaussholder and Tachyon filter the post content via the
- * the_content filter, we need to make sure it happens in the correct
- * order, as we want Gaussholder to hook in after Tachyon has done
- * all the image URL replacements.
- *
- * @return void
- */
-function set_gaussholder_filter_after_tachyon() {
-	remove_filter( 'the_content', 'Gaussholder\\Frontend\\mangle_images', 30 );
-	// Tachyon hooks the content at 999999.
-	add_filter( 'the_content', 'Gaussholder\\Frontend\\mangle_images', 999999 + 1 );
 }
 
 /**
