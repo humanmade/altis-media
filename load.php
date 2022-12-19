@@ -16,7 +16,6 @@ add_action( 'altis.modules.init', function () {
 		'smart-media' => [
 			'srcset-modifiers' => [ 2, 1.5, 0.5, 0.25 ],
 		],
-		'gaussholder' => true,
 		'rekognition' => [
 			'labels' => true,
 			'moderation' => false,
