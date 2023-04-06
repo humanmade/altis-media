@@ -12,7 +12,7 @@
 	"require": {
 		"php": ">=7.1",
 		"darylldoyle/safe-svg": "2.0.1",
-		"humanmade/tachyon-plugin": "~0.11.6",
+		"humanmade/tachyon-plugin": "~0.11.7",
 		"humanmade/smart-media": "~0.4.6",
 		"humanmade/aws-rekognition": "~0.1.8",
 		"humanmade/rename-images-command": "^0.1.0",
