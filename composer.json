@@ -16,7 +16,7 @@
 		"humanmade/smart-media": "~0.4.6",
 		"humanmade/aws-rekognition": "~0.1.8",
 		"humanmade/rename-images-command": "^0.1.0",
-		"humanmade/asset-manager-framework": "^0.13.4",
+		"humanmade/asset-manager-framework": "^0.13.5",
 		"humanmade/amf-wordpress": "^0.3.0"
 	},
 	"autoload": {
