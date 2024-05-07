@@ -13,7 +13,7 @@
 		"php": ">=7.1",
 		"darylldoyle/safe-svg": "2.0.3",
 		"humanmade/tachyon-plugin": "~0.11.9",
-		"humanmade/smart-media": "~0.5.3",
+		"humanmade/smart-media": "~0.5.4",
 		"humanmade/aws-rekognition": "~0.1.9",
 		"humanmade/rename-images-command": "^0.1.0",
 		"humanmade/asset-manager-framework": "^0.13.5",
