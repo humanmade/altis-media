@@ -1,14 +1,18 @@
 # Asset Manager Framework
 
-The Asset Manager Framework (AMF) enables using external providers such as a Digital Asset Manager (DAM), another WordPress website, or a central site within a Multisite installation. The [Global Media Library feature](./global-media-library.md) is built on top of this framework.
+The Asset Manager Framework (AMF) enables using external providers such as a Digital Asset Manager (DAM), another WordPress website,
+or a central site within a Multisite installation. The [Global Media Library feature](./global-media-library.md) is built on top of
+this framework.
 
-It handles the necessary integration with WordPress (Ajax endpoints and Backbone components) leaving you to focus on just the server-side API connection to your media source.
+It handles the necessary integration with WordPress (Ajax endpoints and Backbone components) leaving you to focus on just the
+server-side API connection to your media source.
 
 The intention is that media provided by any external source will become a seamless part of your site's media library.
 
 ## Loading AMF
 
-AMF is loaded automatically when using the Global Media Library feature, however if you would like to use the framework without the global media library you can manually load it using the function `Altis\Media\load_amf()`:
+AMF is loaded automatically when using the Global Media Library feature, however if you would like to use the framework without the
+global media library you can manually load it using the function `Altis\Media\load_amf()`:
 
 ```php
 add_action( 'plugins_loaded', function () {
@@ -23,22 +27,31 @@ There are two main aspects to the framework.
 1. Allow the media manager grid to display external items which are not attachments on the current site.
 2. Subsequently create a local attachment for an external item when it's selected for use.
 
-The design decision behind this is that allowing for external items to be browsed in the media manager is quite straight forward, but unless each item is associated with a local attachment then most of the rest of WordPress breaks when you go to use an item.
+The design decision behind this is that allowing for external items to be browsed in the media manager is quite straight forward,
+but unless each item is associated with a local attachment then most of the rest of WordPress breaks when you go to use an item.
 
-Asset Manager Framework instead allows external media items to be browsed in the media library grid, but as soon as an item is selected for use (eg. to be inserted into a post or used as a featured image), an attachment is created for the media item, and this gets returned by the media manager.
+Asset Manager Framework instead allows external media items to be browsed in the media library grid, but as soon as an item is
+selected for use (e.g. to be inserted into a post or used as a featured image), an attachment is created for the media item, and
+this gets returned by the media manager.
 
-The actual media file does not get sideloaded into WordPress - it intentionally remains at its external URL. The correct external URL gets referred to as necessary, while a local object attachment is maintained that can be referenced and queried within WordPress.
+The actual media file does not get side loaded into WordPress - it intentionally remains at its external URL. The correct external
+URL gets referred to as necessary, while a local object attachment is maintained that can be referenced and queried within
+WordPress.
 
 ## Integration
 
 There are four steps needed to integrate a media provider using the Asset Manager Framework:
 
-1. Create a provider which extends the `AssetManagerFramework\Provider` class and implements its `get_id()`, `get_name()` and `request()` methods.
-2. Process the response from the external media provider by creating an array of `AssetManagerFramework\Media` objects (or objects that extend that class) and setting values on each according to the response data.
-3. Return a new `AssetManagerFramework\MediaResponse` object. The `MediaResponse` object takes a `MediaList` (with the array of `AssetManagerFramework\Media` objects as its first parameter), the total number of items available, and the number of items requested per page.
-2. Hook into the `amf/register_providers` action to register your provider for use.
+1. Create a provider which extends the `AssetManagerFramework\Provider` class and implements its `get_id()`, `get_name()`
+   and `request()` methods.
+2. Process the response from the external media provider by creating an array of `AssetManagerFramework\Media` objects (or objects
+   that extend that class) and setting values on each according to the response data.
+3. Return a new `AssetManagerFramework\MediaResponse` object. The `MediaResponse` object takes a `MediaList` (with the array
+   of `AssetManagerFramework\Media` objects as its first parameter), the total number of items available, and the number of items
+   requested per page.
+4. Hook into the `amf/register_providers` action to register your provider for use.
 
-Here's a basic example of a provider which supplies images from unsplash.com:
+Here's a basic example of a provider which supplies images from Unsplash:
 
 ```php
 use AssetManagerFramework\Image;
@@ -63,7 +76,7 @@ class UnsplashProvider extends Provider {
      * @param array $args The WP_Query args array.
      * @return MediaResponse
      */
-	protected function request( array $args ) : MediaResponse {
+    protected function request( array $args ) : MediaResponse {
 
         $url = 'https://api.unsplash.com/photos';
 
@@ -110,17 +123,20 @@ class UnsplashProvider extends Provider {
 
 // Register the provider.
 add_action( 'amf/register_providers', function ( ProviderRegistry $provider_registry ) {
-	$provider_registry->register( new UnsplashProvider() );
+    $provider_registry->register( new UnsplashProvider() );
 } );
 ```
 
-For a more complete example using Unsplash see the [AMF Unsplash integration plugin](https://github.com/humanmade/amf-unsplash) for reference.
+For a complete example using Unsplash see the [AMF Unsplash integration plugin](https://github.com/humanmade/amf-unsplash) for
+reference.
 
-Depending on the API you are querying the way to find the total number of items available may vary, typically they are provided in query response headers.
+Depending on the API you are querying the way to find the total number of items available may vary, typically they are provided in
+query response headers.
 
 ### Dynamic Image Resizing
 
-AMF provides an interface to enable dynamic image resizing for your provider classes. The Global Media Library uses this to deliver assets via Tachyon out of the box.
+AMF provides an interface to enable dynamic image resizing for your provider classes. The Global Media Library uses this to deliver
+assets via Tachyon out of the box.
 
 To make a provider that can resize assets on the fly it needs to implement the `Resize` interface:
 
@@ -156,7 +172,8 @@ class ResizingUnsplashProvider extends UnsplashProvider implements Resize {
 
 ### Modifying Existing Providers
 
-Since you have access to each provider instance during registration via the `amf/provider` filter, you can also use it and decorate it, replace it with a subclass of a specific provider or replace it entirely:
+Since you have access to each provider instance during registration via the `amf/provider` filter, you can also use it and decorate
+it, replace it with a subclass of a specific provider or replace it entirely:
 
 ```php
 use AssetManagerFramework\Provider;
@@ -167,11 +184,12 @@ add_filter( 'amf/provider', function ( Provider $provider, string $id ) {
         return $provider;
     }
 
-	return new ResizingUnsplashProvider();
+    return new ResizingUnsplashProvider();
 }, 10, 2 );
 ```
 
-This is useful, for example, when you are using a third-party provider implementation and want to change certain behavior. Remember to use a priority later than the default for this filter, for example 20, so your code runs after the default filter.
+This is useful, for example, when you are using a third-party provider implementation and want to change certain behavior. Remember
+to use a priority later than the default for this filter, for example 20, so your code runs after the default filter.
 
 ### `AssetManagerFramework\ProviderRegistry` Class
 
@@ -191,7 +209,9 @@ Registers a new provider class.
 
 ### `AssetManagerFramework\MediaResponse( MediaList $items, int $total = 0, int $per_page = 40 )` Class
 
-The `MediaResponse` class ensures that the media library can correctly provide paginated results. You should derive the values for the total number of items available and the items requested per page from any remote requests made in your `Provider`'s `request` method.
+The `MediaResponse` class ensures that the media library can correctly provide paginated results. You should derive the values for
+the total number of items available and the items requested per page from any remote requests made in your `Provider`'s `request`
+method.
 
 **`get_items() : MediaList`**
 
@@ -204,9 +224,11 @@ Returns the total number of available items set via the constructor. Used intern
 **`get_total_pages() : int`**
 
 Returns the total number of pages available to paginate through. Used internally to set response headers.
+
 ### `AssetManagerFramework\Media` Class
 
-The `Media` object is important as it allows you easily map data from any API to data that Altis can understand and use. It is recommended to set as much data as possible given the API responses.
+The `Media` object is important as it allows you easily map data from any API to data that Altis can understand and use. It is
+recommended to set as much data as possible given the API responses.
 
 The following methods are available:
 
@@ -228,9 +250,11 @@ Sets the height of the original file in pixels.
 
 **`set_sizes( array $sizes )`**
 
-The most complex component to set the data for, the sizes array must be a particular shape and defines all the different thumbnail sizes and crops you may need. Determining this data depends a lot on how the provider returns data and how it generates resized images.
+The most complex component to set the data for, the sizes array must be a particular shape and defines all the different thumbnail
+sizes and crops you may need. Determining this data depends a lot on how the provider returns data and how it generates resized
+images.
 
-The sizes array should be a list with size names as keys and width, height, orientation and url data:
+The sizes array should be a list with size names as keys and width, height, orientation and URL data:
 
 ```php
 $sizes = [
@@ -308,7 +332,8 @@ Sets the alternative text for the media, commonly used in the `alt` attribute.
 
 **`set_description( string $description )`**
 
-Sets the description text for the media, can be used for the caption in some cases but is intended for a long description of the file.
+Sets the description text for the media, can be used for the caption in some cases but is intended for a long description of the
+file.
 
 **`set_caption( string $caption )`**
 
@@ -320,11 +345,11 @@ Sets the slug or URL safe version of the media title for use in links.
 
 **`set_date( int $date )`**
 
-A unix timestamp of when the file was created.
+A Unix timestamp of when the file was created.
 
 **`set_modified( int $modified )`**
 
-A unix timestamp of when the file was last edited.
+A Unix timestamp of when the file was last edited.
 
 **`set_file_size( int $file_size )`**
 
@@ -344,7 +369,8 @@ Adds an item of meta data rather than setting or overwriting data like `set_meta
 
 **`set_amf_meta( array $meta )`**
 
-Set additional meta data not stored in the database but for use within AMF during processing. See the hooks and filters section below.
+Set additional meta data not stored in the database but for use within AMF during processing. See the hooks and filters section
+below.
 
 **`add_amf_meta( string $key, mixed $value )`**
 
@@ -360,7 +386,8 @@ Extends the `AssetManagerFramework\Media` class.
 
 ### `AssetManagerFramework\Playable` Class
 
-Designed for audio and video media specifically, this extends the `AssetManagerFramework\Media` class and adds the following methods:
+Designed for audio and video media specifically, this extends the `AssetManagerFramework\Media` class and adds the following
+methods:
 
 **`set_length( string $duration )`**
 
@@ -372,7 +399,7 @@ Set the thumbnail URL for the media.
 
 **`set_bitrate( int $bitrate, string $bitrate_mode = '' )`**
 
-Sets the bitrate and optional bitrate mode.
+Sets the bit rate and optional bit rate mode.
 
 ### `AssetManagerFramework\Video` Class
 
@@ -418,4 +445,5 @@ Filters the AMF provider class during registration. This filter receives each pr
 
 **`amf/script/data: array`**
 
-Filters the data passed client side to the media library integration. By default this contains an associative array with an item called `providers` that is an array of all registered providers including their ID, name and feature support.
+Filters the data passed client side to the media library integration. By default this contains an associative array with an item
+called `providers` that is an array of all registered providers including their ID, name and feature support.
