@@ -88,3 +88,7 @@ The following query string arguments can be applied to any image delivered by Ta
 | `lb`            | String, "w,h"                           | Add letterboxing effect to images, by scaling them to width, height while maintaining the aspect ratio and filling the rest with black or `background`.                                                                                                                                                                                                                      |
 | `background`    | String                                  | Add background color via name (red) or hex value (%23ff0000). Don't forget to escape # as `%23`.                                                                                                                                                                                                                                                                             |
  <!-- markdownlint-enable MD033 -->
+
+## Limitations
+
+Image files that contain dimensions as part of the file name, e.g. `my-image-100x200.png` can cause issues for Tachyon. We recommend you rename all images to remove dimensions from their file names, as well as any other special characters. You can use [this tool](https://github.com/humanmade/rename-images-command) as a framework to convert file names.
