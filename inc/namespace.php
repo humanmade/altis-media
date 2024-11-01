@@ -21,7 +21,7 @@ use HM\AWS_Rekognition;
 function bootstrap() {
 	add_action( 'plugins_loaded', __NAMESPACE__ . '\\load_plugins', 1 );
 
-	// Remove AWS_Rekognition filter for performance purposes, as ElasticSearch is used instead.
+	// Remove AWS_Rekognition filter for performance purposes, as Elasticsearch is used instead.
 	add_action( 'plugins_loaded', function () {
 		remove_filter( 'posts_clauses', 'HM\\AWS_Rekognition\\filter_query_attachment_keywords' );
 	}, 11 );
@@ -109,7 +109,7 @@ function override_aws_rekognition_aws_client( $client, array $params ) : Rekogni
 /**
  * Add rekognition keywords to the search index.
  *
- * @param array $post_data Data to be indexed in ElasticSearch.
+ * @param array $post_data Data to be indexed in Elasticsearch.
  * @param integer $post_id The current post ID.
  * @return array
  */
