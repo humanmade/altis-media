@@ -4,8 +4,7 @@ The Media module supports dynamic image resizing via a microservice called [Tach
 allows arbitrary image resizes to be done on the fly, supports lossless image compression and many file formats such as WebP for
 supported browsers.
 
-By default the Tachyon service is enabled. It can be explicitly disabled by setting the `modules.media.tachyon` configuration
-property to `false`, though this is highly discouraged.
+By default the Tachyon service is enabled.
 
 All images rendered on the front end of the website are automatically modified to use the Tachyon service URLs. Via lossless
 compression and automatic format conversion, image sizes can be reduced up to 70% with no degradation in quality.
@@ -92,3 +91,8 @@ The following query string arguments can be applied to any image delivered by Ta
 ## Limitations
 
 Image files that contain dimensions as part of the file name, e.g. `my-image-100x200.png` can cause issues for Tachyon. We recommend you rename all images to remove dimensions from their file names, as well as any other special characters. You can use [this tool](https://github.com/humanmade/rename-images-command) as a framework to convert file names.
+
+## Disable Tachyon Service
+
+Tachyon service can be explicitly disabled by setting the `modules.media.tachyon` configuration
+property to `false`, though this is highly discouraged.
