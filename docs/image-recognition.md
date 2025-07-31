@@ -138,7 +138,7 @@ add_filter( 'hm.aws.rekognition.alt_text', function ( string $new_alt_text, arra
     return $new_alt_text;
 }, 10, 3 );
 ```
-## Disable Automatic Image Recognition
+## Disabling Automatic Image Recognition
 
 Automatic image recognition can be specifically disabled by setting the `modules.media.rekognition`
 setting to `false`.
