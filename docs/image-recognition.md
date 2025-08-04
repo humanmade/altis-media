@@ -5,8 +5,7 @@ automatically tagged with keywords using machine learning, making all images upl
 
 This is implementation using the [AWS Rekognition](https://github.com/humanmade/aws-rekognition) plugin and service.
 
-By default automatic image recognition is enabled, but can be specifically disabled by setting the `modules.media.rekognition`
-setting to `false`.
+By default automatic image recognition is enabled.
 
 ## Recognition features
 
@@ -139,3 +138,7 @@ add_filter( 'hm.aws.rekognition.alt_text', function ( string $new_alt_text, arra
     return $new_alt_text;
 }, 10, 3 );
 ```
+## Disabling Automatic Image Recognition
+
+Automatic image recognition can be specifically disabled by setting the `modules.media.rekognition`
+setting to `false`.
