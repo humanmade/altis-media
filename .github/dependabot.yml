@@ -16,7 +16,7 @@ updates:
   allow:
   - dependency-type: "direct"
   versioning-strategy: "increase"
-  target-branch: v18-branch
+  target-branch: v24-branch
 - package-ecosystem: composer
   directory: "/"
   schedule:
@@ -25,7 +25,7 @@ updates:
   allow:
   - dependency-type: "direct"
   versioning-strategy: "increase"
-  target-branch: v17-branch
+  target-branch: v23-branch
 - package-ecosystem: composer
   directory: "/"
   schedule:
@@ -34,7 +34,7 @@ updates:
   allow:
   - dependency-type: "direct"
   versioning-strategy: "increase"
-  target-branch: v16-branch
+  target-branch: v22-branch
 - package-ecosystem: composer
   directory: "/"
   schedule:
@@ -43,7 +43,7 @@ updates:
   allow:
   - dependency-type: "direct"
   versioning-strategy: "increase"
-  target-branch: v15-branch
+  target-branch: v21-branch
 - package-ecosystem: composer
   directory: "/"
   schedule:
@@ -52,4 +52,4 @@ updates:
   allow:
   - dependency-type: "direct"
   versioning-strategy: "increase"
-  target-branch: v14-branch
+  target-branch: v20-branch

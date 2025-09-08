@@ -4,35 +4,37 @@ The Global Media Library feature is off by default but can be enabled via the Al
 
 ```json
 {
-	"extra": {
-		"altis": {
-			"modules": {
-				"media": {
-					"global-media-library": true
-				}
-			}
-		}
-	}
+    "extra": {
+        "altis": {
+            "modules": {
+                "media": {
+                    "global-media-library": true
+                }
+            }
+        }
+    }
 }
 ```
 
-When browsing and selecting media all the files will be sourced from the dedicated global content site on the network. This means an image only needs to be uploaded once and it can be used anywhere.
+When browsing and selecting media all the files will be sourced from the dedicated global content site on the network. This means an
+image only needs to be uploaded once and it can be used anywhere.
 
-**Note**: You must run the `wp altis migrate` command to create the [Global Content Repository site](docs://core/global-content-repository.md) for this feature to function.
+**Note**: You must run the `wp altis migrate` command to create
+the [Global Content Repository site](docs://core/global-content-repository.md) for this feature to function.
 
 Alternatively the media library config option can be set to any WordPress site URL that has a public REST API.
 
 ```json
 {
-	"extra": {
-		"altis": {
-			"modules": {
-				"media": {
-					"global-media-library": "https://example.com"
-				}
-			}
-		}
-	}
+    "extra": {
+        "altis": {
+            "modules": {
+                "media": {
+                    "global-media-library": "https://example.com"
+                }
+            }
+        }
+    }
 }
 ```
 
@@ -44,27 +46,28 @@ To do so you can add the following config:
 
 ```json
 {
-	"extra": {
-		"altis": {
-			"modules": {
-				"media": {
-					"local-media-library": false
-				}
-			}
-		}
-	}
+    "extra": {
+        "altis": {
+            "modules": {
+                "media": {
+                    "local-media-library": false
+                }
+            }
+        }
+    }
 }
 ```
 
-Alternatively you can also use the `amf/allow_local_media` filter to conditionally control which sites can use Local Media and which cannot.
+Alternatively you can also use the `amf/allow_local_media` filter to conditionally control which sites can use Local Media and which
+cannot.
 
 ```php
 add_filter( 'amf/allow_local_media', function () : bool {
-	// Local for a custom site meta entry.
-	if ( get_site_meta( get_current_site_id(), 'allow_local_media' ) ) {
-		return true;
-	}
+    // Local for a custom site meta entry.
+    if ( get_site_meta( get_current_site_id(), 'allow_local_media' ) ) {
+        return true;
+    }
 
-	return false;
+    return false;
 } );
 ```
