@@ -62,6 +62,8 @@ class PrivateUploadsUrlChainTest extends \Codeception\TestCase\WPTestCase {
 		// causes wp_get_attachment_url() to return ?attachment_id=N instead
 		// of an S3-style URL. Set it explicitly.
 		update_post_meta( $attachment_id, '_wp_attached_file', '2026/03/test-factory-image.jpg' );
+		// Enrol in the private uploads feature.
+		update_post_meta( $attachment_id, '_s3_privacy', 'auto' );
 
 		// Confirm our filter marks this as private.
 		$this->assertTrue(
@@ -107,6 +109,8 @@ class PrivateUploadsUrlChainTest extends \Codeception\TestCase\WPTestCase {
 
 		// Set _wp_attached_file so wp_get_attachment_url() returns an S3-style URL.
 		update_post_meta( $attachment_id, '_wp_attached_file', '2026/03/test-factory-public.jpg' );
+		// Enrol in the feature (auto on a published post = public).
+		update_post_meta( $attachment_id, '_s3_privacy', 'auto' );
 
 		// Confirm our filter marks this as public.
 		$this->assertFalse(
@@ -229,6 +233,8 @@ class PrivateUploadsUrlChainTest extends \Codeception\TestCase\WPTestCase {
 
 		// Set _wp_attached_file so wp_get_attachment_url() returns an S3-style URL.
 		update_post_meta( $attachment_id, '_wp_attached_file', '2026/03/test-factory-chain.jpg' );
+		// Enrol in the private uploads feature.
+		update_post_meta( $attachment_id, '_s3_privacy', 'auto' );
 
 		// Get the presigned S3 URL.
 		$s3_url = wp_get_attachment_url( $attachment_id );
@@ -270,6 +276,8 @@ class PrivateUploadsUrlChainTest extends \Codeception\TestCase\WPTestCase {
 		$attachment_id = self::factory()->attachment->create( [
 			'post_parent' => $post_id,
 		] );
+		// Note: set_acl_on_metadata_save() will set _s3_privacy to 'auto'
+		// automatically when metadata is saved, so no need to set it here.
 
 		$acl_calls = [];
 		add_action( 's3_uploads_set_attachment_files_acl', function ( $id, $acl ) use ( &$acl_calls ) {

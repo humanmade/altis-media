@@ -21,26 +21,83 @@ class PrivateUploadsTest extends \Codeception\TestCase\WPTestCase {
 	protected $tester;
 
 	/**
-	 * Test that unattached media (post_parent = 0) is private.
+	 * Test that auto-managed unattached media (post_parent = 0) is private.
 	 *
 	 * @return void
 	 */
-	public function testUnattachedMediaIsPrivate() {
+	public function testUnattachedAutoMediaIsPrivate() {
+		$attachment_id = self::factory()->attachment->create( [
+			'post_parent' => 0,
+		] );
+		update_post_meta( $attachment_id, '_s3_privacy', 'auto' );
+
+		$result = Private_Uploads\is_attachment_private( false, $attachment_id );
+
+		$this->assertTrue( $result, 'Auto-managed unattached media should be private.' );
+	}
+
+	/**
+	 * Test that auto-managed media attached to a draft post is private.
+	 *
+	 * @return void
+	 */
+	public function testAutoAttachmentOnDraftPostIsPrivate() {
+		$post_id = self::factory()->post->create( [
+			'post_status' => 'draft',
+		] );
+		$attachment_id = self::factory()->attachment->create( [
+			'post_parent' => $post_id,
+		] );
+		update_post_meta( $attachment_id, '_s3_privacy', 'auto' );
+
+		$result = Private_Uploads\is_attachment_private( false, $attachment_id );
+
+		$this->assertTrue( $result, 'Auto-managed attachment on draft post should be private.' );
+	}
+
+	/**
+	 * Test that auto-managed media attached to a published post is public.
+	 *
+	 * @return void
+	 */
+	public function testAutoAttachmentOnPublishedPostIsPublic() {
+		$post_id = self::factory()->post->create( [
+			'post_status' => 'publish',
+		] );
+		$attachment_id = self::factory()->attachment->create( [
+			'post_parent' => $post_id,
+		] );
+		update_post_meta( $attachment_id, '_s3_privacy', 'auto' );
+
+		$result = Private_Uploads\is_attachment_private( false, $attachment_id );
+
+		$this->assertFalse( $result, 'Auto-managed attachment on published post should be public.' );
+	}
+
+	/**
+	 * Test that legacy images (no _s3_privacy meta) are always public.
+	 *
+	 * Pre-existing images uploaded before the private uploads feature
+	 * was enabled should remain unaffected and publicly accessible.
+	 *
+	 * @return void
+	 */
+	public function testLegacyUnattachedMediaIsPublic() {
 		$attachment_id = self::factory()->attachment->create( [
 			'post_parent' => 0,
 		] );
 
 		$result = Private_Uploads\is_attachment_private( false, $attachment_id );
 
-		$this->assertTrue( $result, 'Unattached media should be private.' );
+		$this->assertFalse( $result, 'Legacy unattached media (no _s3_privacy meta) should be public.' );
 	}
 
 	/**
-	 * Test that media attached to a draft post is private.
+	 * Test that legacy images on draft posts are still public.
 	 *
 	 * @return void
 	 */
-	public function testAttachmentOnDraftPostIsPrivate() {
+	public function testLegacyAttachmentOnDraftPostIsPublic() {
 		$post_id = self::factory()->post->create( [
 			'post_status' => 'draft',
 		] );
@@ -50,25 +107,7 @@ class PrivateUploadsTest extends \Codeception\TestCase\WPTestCase {
 
 		$result = Private_Uploads\is_attachment_private( false, $attachment_id );
 
-		$this->assertTrue( $result, 'Attachment on draft post should be private.' );
-	}
-
-	/**
-	 * Test that media attached to a published post is public.
-	 *
-	 * @return void
-	 */
-	public function testAttachmentOnPublishedPostIsPublic() {
-		$post_id = self::factory()->post->create( [
-			'post_status' => 'publish',
-		] );
-		$attachment_id = self::factory()->attachment->create( [
-			'post_parent' => $post_id,
-		] );
-
-		$result = Private_Uploads\is_attachment_private( false, $attachment_id );
-
-		$this->assertFalse( $result, 'Attachment on published post should be public.' );
+		$this->assertFalse( $result, 'Legacy attachment on draft post (no _s3_privacy meta) should be public.' );
 	}
 
 	/**
@@ -128,6 +167,7 @@ class PrivateUploadsTest extends \Codeception\TestCase\WPTestCase {
 		$attachment_id = self::factory()->attachment->create( [
 			'post_parent' => 0,
 		] );
+		update_post_meta( $attachment_id, '_s3_privacy', 'auto' );
 
 		$result = Private_Uploads\is_attachment_private( false, $attachment_id );
 
@@ -154,6 +194,7 @@ class PrivateUploadsTest extends \Codeception\TestCase\WPTestCase {
 		$attachment_id = self::factory()->attachment->create( [
 			'post_parent' => $post_id,
 		] );
+		update_post_meta( $attachment_id, '_s3_privacy', 'auto' );
 
 		$acl_calls = [];
 		add_action( 's3_uploads_set_attachment_files_acl', function ( $id, $acl ) use ( &$acl_calls ) {
@@ -188,6 +229,7 @@ class PrivateUploadsTest extends \Codeception\TestCase\WPTestCase {
 		$attachment_id = self::factory()->attachment->create( [
 			'post_parent' => $post_id,
 		] );
+		update_post_meta( $attachment_id, '_s3_privacy', 'auto' );
 
 		$acl_calls = [];
 		add_action( 's3_uploads_set_attachment_files_acl', function ( $id, $acl ) use ( &$acl_calls ) {
@@ -228,6 +270,12 @@ class PrivateUploadsTest extends \Codeception\TestCase\WPTestCase {
 		$auto_attachment = self::factory()->attachment->create( [
 			'post_parent' => $post_id,
 		] );
+		update_post_meta( $auto_attachment, '_s3_privacy', 'auto' );
+
+		// Also create a legacy attachment (no _s3_privacy meta).
+		$legacy_attachment = self::factory()->attachment->create( [
+			'post_parent' => $post_id,
+		] );
 
 		$acl_calls = [];
 		add_action( 's3_uploads_set_attachment_files_acl', function ( $id, $acl ) use ( &$acl_calls ) {
@@ -245,6 +293,7 @@ class PrivateUploadsTest extends \Codeception\TestCase\WPTestCase {
 		$updated_ids = array_column( $acl_calls, 'attachment_id' );
 		$this->assertContains( $auto_attachment, $updated_ids, 'Auto attachment should be updated.' );
 		$this->assertNotContains( $manual_attachment, $updated_ids, 'Manual override attachment should be skipped.' );
+		$this->assertNotContains( $legacy_attachment, $updated_ids, 'Legacy attachment (no _s3_privacy meta) should be skipped.' );
 	}
 
 	/**

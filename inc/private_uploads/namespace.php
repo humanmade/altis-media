@@ -52,6 +52,10 @@ function bootstrap() : void {
  * working around the timing issue where S3 Uploads' own hook runs before
  * metadata is saved and therefore misses generated thumbnail sizes.
  *
+ * Also enrolls new uploads in the private uploads feature by setting
+ * `_s3_privacy` to 'auto' if not already set, so that pre-existing
+ * images (without the meta) remain unaffected.
+ *
  * @param int    $meta_id    The meta ID.
  * @param int    $post_id    The post (attachment) ID.
  * @param string $meta_key   The meta key.
@@ -67,6 +71,13 @@ function set_acl_on_metadata_save( int $meta_id, int $post_id, string $meta_key,
 		return;
 	}
 
+	// Enrol new uploads in the feature. Pre-existing images without
+	// this meta will remain public (see is_attachment_private()).
+	$current_privacy = get_post_meta( $post_id, '_s3_privacy', true );
+	if ( empty( $current_privacy ) ) {
+		update_post_meta( $post_id, '_s3_privacy', 'auto' );
+	}
+
 	if ( ! is_attachment_private( false, $post_id ) ) {
 		return;
 	}
@@ -78,10 +89,12 @@ function set_acl_on_metadata_save( int $meta_id, int $post_id, string $meta_key,
  * Determine whether an attachment should be private.
  *
  * Priority order:
- * 1. Manual override via `_s3_privacy` post meta
- * 2. Global media library attachments are always public
- * 3. Unattached media (post_parent = 0) defaults to private
- * 4. Based on parent post status: published = public, otherwise private
+ * 1. Manual override via `_s3_privacy` post meta ('public' or 'private')
+ * 2. Legacy/pre-existing images (no `_s3_privacy` meta) are always public
+ * 3. Auto-managed images (`_s3_privacy` = 'auto'):
+ *    a. Global media library attachments are always public
+ *    b. Unattached media (post_parent = 0) defaults to private
+ *    c. Based on parent post status: published = public, otherwise private
  *
  * @param bool $is_private Current private status.
  * @param int  $attachment_id The attachment post ID.
@@ -89,26 +102,34 @@ function set_acl_on_metadata_save( int $meta_id, int $post_id, string $meta_key,
  */
 function is_attachment_private( bool $is_private, int $attachment_id ) : bool {
 	// 1. Check for manual override.
-	$manual = get_post_meta( $attachment_id, '_s3_privacy', true );
-	if ( $manual === 'public' ) {
+	$privacy = get_post_meta( $attachment_id, '_s3_privacy', true );
+	if ( $privacy === 'public' ) {
 		return false;
 	}
-	if ( $manual === 'private' ) {
+	if ( $privacy === 'private' ) {
 		return true;
 	}
 
-	// 2. Global media library is always public.
+	// 2. Legacy/pre-existing images without privacy meta are always public.
+	// Only images explicitly enrolled in the feature (via 'auto' meta set
+	// during upload) are subject to automatic privacy management.
+	if ( $privacy !== 'auto' ) {
+		return false;
+	}
+
+	// 3. Auto-managed: determine based on context.
+	// 3a. Global media library is always public.
 	if ( function_exists( 'Altis\\Global_Content\\is_global_site' ) && Global_Content\is_global_site() ) {
 		return false;
 	}
 
-	// 3. Unattached media defaults to private.
+	// 3b. Unattached media defaults to private.
 	$attachment = get_post( $attachment_id );
 	if ( ! $attachment || empty( $attachment->post_parent ) ) {
 		return true;
 	}
 
-	// 4. Based on parent post status.
+	// 3c. Based on parent post status.
 	$parent = get_post( $attachment->post_parent );
 	if ( ! $parent ) {
 		return true;
@@ -170,9 +191,10 @@ function handle_post_status_transition( string $new_status, string $old_status, 
 	$plugin = S3_Plugin::get_instance();
 
 	foreach ( $attachments as $attachment_id ) {
-		// Skip attachments with manual privacy override.
-		$manual = get_post_meta( $attachment_id, '_s3_privacy', true );
-		if ( ! empty( $manual ) ) {
+		// Only process auto-managed attachments. Skip legacy images
+		// (no meta) and those with manual overrides ('public'/'private').
+		$privacy = get_post_meta( $attachment_id, '_s3_privacy', true );
+		if ( $privacy !== 'auto' ) {
 			continue;
 		}
 
@@ -192,13 +214,14 @@ function get_privacy_status( int $attachment_id ) : string {
 }
 
 /**
- * Set a manual privacy override for an attachment.
+ * Set the privacy value for an attachment.
  *
- * Pass an empty string to clear the manual override and revert
- * to automatic behaviour.
+ * Pass 'auto' to enrol in automatic management, 'public' or 'private'
+ * for a manual override, or an empty string to remove the meta entirely
+ * (reverting to legacy/unmanaged public behaviour).
  *
  * @param int    $attachment_id The attachment post ID.
- * @param string $privacy       'public', 'private', or '' to clear.
+ * @param string $privacy       'auto', 'public', 'private', or '' to clear.
  * @return void
  */
 function set_manual_privacy( int $attachment_id, string $privacy ) : void {
@@ -282,10 +305,10 @@ function render_privacy_column( string $column_name, int $attachment_id ) : void
  */
 function add_privacy_field( array $form_fields, WP_Post $post ) : array {
 	$manual = get_post_meta( $post->ID, '_s3_privacy', true );
-	$current = $manual ?: '';
+	$current = $manual ?: 'auto';
 
 	$options = [
-		'' => __( 'Auto (based on parent post status)', 'altis' ),
+		'auto' => __( 'Auto (based on parent post status)', 'altis' ),
 		'private' => __( 'Private', 'altis' ),
 		'public' => __( 'Public', 'altis' ),
 	];
@@ -328,7 +351,7 @@ function add_privacy_field( array $form_fields, WP_Post $post ) : array {
 function save_privacy_field( array $post, array $attachment ) : array {
 	$privacy = $attachment['s3_privacy'] ?? '';
 
-	if ( ! in_array( $privacy, [ '', 'private', 'public' ], true ) ) {
+	if ( ! in_array( $privacy, [ 'auto', 'private', 'public' ], true ) ) {
 		return $post;
 	}
 
