@@ -28,6 +28,9 @@ function bootstrap() {
 
 	// Set up global asset management.
 	Global_Assets\bootstrap();
+
+	// Set up private uploads.
+	Private_Uploads\bootstrap();
 }
 
 /**

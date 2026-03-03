@@ -25,7 +25,8 @@
 		],
 		"files": [
 			"inc/namespace.php",
-			"inc/global_assets/namespace.php"
+			"inc/global_assets/namespace.php",
+			"inc/private_uploads/namespace.php"
 		]
 	},
 	"extra": {
@@ -38,6 +39,11 @@
 				"humanmade/asset-manager-framework",
 				"humanmade/amf-wordpress"
 			]
+		}
+	},
+	"config": {
+		"allow-plugins": {
+			"composer/installers": false
 		}
 	}
 }
