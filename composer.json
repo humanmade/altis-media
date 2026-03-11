@@ -25,7 +25,17 @@
 		],
 		"files": [
 			"inc/namespace.php",
-			"inc/global_assets/namespace.php"
+			"inc/global_assets/namespace.php",
+			"inc/private_media/namespace.php",
+			"inc/private_media/visibility.php",
+			"inc/private_media/content_parser.php",
+			"inc/private_media/post_lifecycle.php",
+			"inc/private_media/sanitisation.php",
+			"inc/private_media/signed_urls.php",
+			"inc/private_media/ui.php",
+			"inc/private_media/site_icon.php",
+			"inc/private_media/query_compat.php",
+			"inc/private_media/cli.php"
 		]
 	},
 	"extra": {
