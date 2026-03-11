@@ -38,6 +38,10 @@ function bootstrap() {
 	// AJAX handler for modal visibility changes.
 	add_action( 'wp_ajax_private_media_set_visibility', __NAMESPACE__ . '\\ajax_set_visibility' );
 
+	// Media list visibility column.
+	add_filter( 'manage_media_columns', __NAMESPACE__ . '\\add_visibility_column' );
+	add_action( 'manage_media_custom_column', __NAMESPACE__ . '\\render_visibility_column', 10, 2 );
+
 	// Enqueue assets.
 	add_action( 'admin_enqueue_scripts', __NAMESPACE__ . '\\enqueue_assets' );
 
@@ -313,6 +317,51 @@ function bulk_visibility_confirmation() : void {
 	<?php
 	require_once ABSPATH . 'wp-admin/admin-footer.php';
 	exit;
+}
+
+/**
+ * Add visibility column to media list table.
+ *
+ * @param array $columns Existing columns.
+ * @return array Modified columns.
+ */
+function add_visibility_column( array $columns ) : array {
+	// Insert after the 'title' column.
+	$new_columns = [];
+	foreach ( $columns as $key => $label ) {
+		$new_columns[ $key ] = $label;
+		if ( $key === 'title' ) {
+			$new_columns['private_media_visibility'] = __( 'Visibility', 'altis' );
+		}
+	}
+
+	return $new_columns;
+}
+
+/**
+ * Render the visibility column content.
+ *
+ * @param string $column_name The column name.
+ * @param int    $post_id     The attachment ID.
+ * @return void
+ */
+function render_visibility_column( string $column_name, int $post_id ) : void {
+	if ( $column_name !== 'private_media_visibility' ) {
+		return;
+	}
+
+	$is_public = Visibility\check_attachment_is_public( $post_id );
+	$override = Visibility\get_override( $post_id );
+
+	if ( $override === 'public' ) {
+		echo '<span class="private-media-status private-media-status--public">' . esc_html__( 'Public (forced)', 'altis' ) . '</span>';
+	} elseif ( $override === 'private' ) {
+		echo '<span class="private-media-status private-media-status--private">' . esc_html__( 'Private (forced)', 'altis' ) . '</span>';
+	} elseif ( $is_public ) {
+		echo '<span class="private-media-status private-media-status--public">' . esc_html__( 'Public', 'altis' ) . '</span>';
+	} else {
+		echo '<span class="private-media-status private-media-status--private">' . esc_html__( 'Private', 'altis' ) . '</span>';
+	}
 }
 
 /**
