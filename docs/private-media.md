@@ -219,10 +219,10 @@ Re-evaluates the visibility of all files, correcting any inconsistencies. Suppor
 
 ## Hooks and Filters Reference
 
-| Filter | Description |
-|---|---|
-| `private_media/allowed_post_types` | Array of post types to track for media references. |
+| Filter                                    | Description                                                               |
+|-------------------------------------------|---------------------------------------------------------------------------|
+| `private_media/allowed_post_types`        | Array of post types to track for media references.                        |
 | `private_media/post_meta_attachment_keys` | Array of field names that store file IDs (like the featured image field). |
-| `private_media/post_attachment_ids` | Array of file IDs found in a post. Receives `$ids` and `$post`. |
-| `private_media/update_s3_acl` | Intercept storage permission updates. Return non-null to short-circuit. |
-| `private_media/purge_cdn_cache` | Intercept CDN cache clearing. Return non-null to short-circuit. |
+| `private_media/post_attachment_ids`       | Array of file IDs found in a post. Receives `$ids` and `$post`.           |
+| `private_media/update_s3_acl`             | Intercept storage permission updates. Return non-null to short-circuit.   |
+| `private_media/purge_cdn_cache`           | Intercept CDN cache clearing. Return non-null to short-circuit.           |
