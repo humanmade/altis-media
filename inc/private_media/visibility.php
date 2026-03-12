@@ -84,6 +84,9 @@ function check_attachment_is_public( int $attachment_id ) : bool {
  * @return void
  */
 function set_attachment_visibility( int $attachment_id ) : void {
+	// Invalidate the per-request cache so the fresh check below is accurate.
+	is_attachment_private_cached( $attachment_id, true );
+
 	$is_public = check_attachment_is_public( $attachment_id );
 	$new_status = $is_public ? 'publish' : 'private';
 	$new_acl = $is_public ? 'public-read' : 'private';
@@ -330,6 +333,33 @@ function grant_private_attachment_read( array $caps, string $cap, int $user_id, 
 }
 
 /**
+ * Per-request cache for attachment privacy checks.
+ *
+ * Avoids repeated DB lookups when S3 Uploads calls the filter for every
+ * URL of every image size (e.g. 40 attachments × 5 sizes = 200 calls
+ * per media library page load). Accepts an optional second parameter to
+ * clear a specific entry when visibility changes within the same request.
+ *
+ * @param int       $attachment_id The attachment ID.
+ * @param bool|null $invalidate    Pass true to clear the cached entry.
+ * @return bool|null True if private, false if public, null on invalidation.
+ */
+function is_attachment_private_cached( int $attachment_id, ?bool $invalidate = null ) : ?bool {
+	static $cache = [];
+
+	if ( $invalidate ) {
+		unset( $cache[ $attachment_id ] );
+		return null;
+	}
+
+	if ( ! isset( $cache[ $attachment_id ] ) ) {
+		$cache[ $attachment_id ] = ! check_attachment_is_public( $attachment_id );
+	}
+
+	return $cache[ $attachment_id ];
+}
+
+/**
  * Filter callback for S3 Uploads private attachment check.
  *
  * @param bool $is_private Whether the attachment is private.
@@ -337,10 +367,7 @@ function grant_private_attachment_read( array $caps, string $cap, int $user_id, 
  * @return bool
  */
 function filter_is_attachment_private( bool $is_private, int $attachment_id ) : bool {
-	if ( ! check_attachment_is_public( $attachment_id ) ) {
-		return true;
-	}
-	return $is_private;
+	return is_attachment_private_cached( $attachment_id ) ? true : $is_private;
 }
 
 /**

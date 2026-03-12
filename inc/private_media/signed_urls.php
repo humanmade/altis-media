@@ -72,7 +72,7 @@ function sign_rest_content( \WP_REST_Response $response, \WP_Post $post ) : \WP_
 	$data = $response->get_data();
 
 	if ( ! empty( $data['content']['raw'] ) ) {
-		$data['content']['raw'] = replace_private_urls( $data['content']['raw'] );
+		$data['content']['raw'] = replace_private_urls( $data['content']['raw'], true );
 		$response->set_data( $data );
 	}
 
@@ -82,10 +82,14 @@ function sign_rest_content( \WP_REST_Response $response, \WP_Post $post ) : \WP_
 /**
  * Replace private media URLs in content with signed S3 URLs.
  *
- * @param string $content The content to process.
+ * @param string $content         The content to process.
+ * @param bool   $tachyon_images  When true, route signed image URLs through
+ *                                tachyon_url() for presign bundling. Use this
+ *                                for contexts where Tachyon's the_content filter
+ *                                won't run (e.g. REST content.raw).
  * @return string Content with private URLs replaced by signed ones.
  */
-function replace_private_urls( string $content ) : string {
+function replace_private_urls( string $content, bool $tachyon_images = false ) : string {
 	if ( ! class_exists( '\\S3_Uploads\\Plugin' ) ) {
 		return $content;
 	}
@@ -107,6 +111,14 @@ function replace_private_urls( string $content ) : string {
 		);
 
 		if ( $signed_url !== $modified_url ) {
+			// Route signed image URLs through Tachyon so the X-Amz-* params
+			// get bundled into a presign query parameter. Without this, the
+			// browser would hit CloudFront directly with S3 signing params
+			// which it cannot validate (host mismatch) → 404.
+			if ( $tachyon_images && function_exists( 'tachyon_url' ) && wp_attachment_is_image( $attachment_id ) ) {
+				$signed_url = tachyon_url( $signed_url );
+			}
+
 			$content = str_replace( $modified_url, $signed_url, $content );
 		}
 	}
