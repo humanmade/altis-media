@@ -1,0 +1,59 @@
+/**
+ * Private Media — Styles.
+ *
+ * Lock icon overlay and status label styles for the media library.
+ */
+
+/* Lock icon overlay on private attachments in grid view */
+.private-media-lock {
+	position: absolute;
+	top: 8px;
+	right: 8px;
+	background: rgba( 0, 0, 0, 0.7 );
+	color: #fff;
+	border-radius: 50%;
+	width: 28px;
+	height: 28px;
+	line-height: 28px;
+	text-align: center;
+	font-size: 16px;
+	z-index: 10;
+	pointer-events: none;
+}
+
+/* Ensure attachment preview is positioned for overlay */
+.attachment-preview {
+	position: relative;
+}
+
+/* Status label in media details */
+.compat-field-private_media_status .field strong {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 3px;
+	font-size: 12px;
+}
+
+/* Visibility override dropdown */
+.private-media-override {
+	width: 100%;
+	max-width: 250px;
+}
+
+/* List table row action links */
+.row-actions .private_media_public a,
+.row-actions .private_media_private a,
+.row-actions .private_media_auto a {
+	cursor: pointer;
+}
+
+/* Bulk action confirmation page */
+.private-media-bulk-confirm .attachment-list {
+	margin: 10px 0;
+	padding: 0;
+	list-style: disc inside;
+}
+
+.private-media-bulk-confirm .attachment-list li {
+	padding: 3px 0;
+}
