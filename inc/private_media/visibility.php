@@ -94,10 +94,17 @@ function set_attachment_visibility( int $attachment_id ) : void {
 	$current_status = get_post_status( $attachment_id );
 
 	if ( $current_status !== $new_status ) {
-		wp_update_post( [
-			'ID'          => $attachment_id,
-			'post_status' => $new_status,
-		] );
+		// Use a direct DB update instead of wp_update_post() to avoid
+		// triggering nested hook cascades (e.g. image srcset generation)
+		// that can cause out-of-memory errors when called from within
+		// the parent post's transition_post_status handler.
+		global $wpdb;
+		$wpdb->update(
+			$wpdb->posts,
+			[ 'post_status' => $new_status ],
+			[ 'ID' => $attachment_id ]
+		);
+		clean_post_cache( $attachment_id );
 	}
 
 	update_s3_acl( $attachment_id, $new_acl );
