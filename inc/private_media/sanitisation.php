@@ -50,7 +50,11 @@ function sanitise_post_content( array $data ) : array {
 		return $data;
 	}
 
-	$data['post_content'] = strip_aws_params_from_content( $data['post_content'] );
+	// wp_insert_post_data receives slashed content (\" instead of ").
+	// Unslash before regex processing and re-slash after.
+	$data['post_content'] = wp_slash(
+		strip_aws_params_from_content( wp_unslash( $data['post_content'] ) )
+	);
 
 	return $data;
 }

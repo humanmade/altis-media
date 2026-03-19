@@ -56,7 +56,8 @@ function check_attachment_is_public( int $attachment_id ) : bool {
 	}
 
 	// 4. Legacy attachment (pre-migration).
-	$metadata = wp_get_attachment_metadata( $attachment_id );
+	// Use unfiltered read to avoid stale static caches in third-party filters.
+	$metadata = wp_get_attachment_metadata( $attachment_id, true );
 	if ( is_array( $metadata ) && ! empty( $metadata['legacy_attachment'] ) ) {
 		return true;
 	}
@@ -197,7 +198,8 @@ function set_new_attachment_private( int $attachment_id ) : void {
  * @return string 'auto', 'public', or 'private'.
  */
 function get_override( int $attachment_id ) : string {
-	$metadata = wp_get_attachment_metadata( $attachment_id );
+	// Use unfiltered read to avoid stale static caches in third-party filters.
+	$metadata = wp_get_attachment_metadata( $attachment_id, true );
 	if ( ! is_array( $metadata ) || empty( $metadata['altis_override_visibility'] ) ) {
 		return 'auto';
 	}
@@ -222,7 +224,8 @@ function set_override( int $attachment_id, string $override ) : void {
 		return;
 	}
 
-	$metadata = wp_get_attachment_metadata( $attachment_id );
+	// Use unfiltered read to avoid stale static caches in third-party filters.
+	$metadata = wp_get_attachment_metadata( $attachment_id, true );
 	if ( ! is_array( $metadata ) ) {
 		$metadata = [];
 	}
@@ -275,7 +278,8 @@ function remove_post_reference( int $attachment_id, int $post_id ) : void {
  * @return int[] Array of post IDs.
  */
 function get_used_in_posts( int $attachment_id ) : array {
-	$metadata = wp_get_attachment_metadata( $attachment_id );
+	// Use unfiltered read to avoid stale static caches in third-party filters.
+	$metadata = wp_get_attachment_metadata( $attachment_id, true );
 	if ( ! is_array( $metadata ) || empty( $metadata['altis_used_in_published_post'] ) ) {
 		return [];
 	}
@@ -291,7 +295,8 @@ function get_used_in_posts( int $attachment_id ) : array {
  * @return void
  */
 function set_used_in_posts( int $attachment_id, array $post_ids ) : void {
-	$metadata = wp_get_attachment_metadata( $attachment_id );
+	// Use unfiltered read to avoid stale static caches in third-party filters.
+	$metadata = wp_get_attachment_metadata( $attachment_id, true );
 	if ( ! is_array( $metadata ) ) {
 		$metadata = [];
 	}
