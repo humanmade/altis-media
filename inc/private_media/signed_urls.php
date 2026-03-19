@@ -19,7 +19,10 @@ use Altis\Media\Private_Media\Visibility;
  * @return void
  */
 function bootstrap() {
-	add_filter( 'the_content', __NAMESPACE__ . '\\replace_private_urls_in_preview', 999 );
+	// Run after Tachyon's filter_the_content (priority 999999) so that
+	// Tachyon has already converted URLs and added resize params. We then
+	// append presign params to the Tachyon URLs using add_query_arg.
+	add_filter( 'the_content', __NAMESPACE__ . '\\replace_private_urls_in_preview', 1000000 );
 
 	// Register REST filters for all post types with editor support.
 	add_action( 'rest_api_init', __NAMESPACE__ . '\\register_rest_filters' );
@@ -141,21 +144,23 @@ function replace_private_urls( string $content ) : string {
 		) );
 
 		if ( $signed_url !== $attachment_url ) {
-			// Route images through Tachyon so it can handle resizing and
-			// forward the S3 signing params to the origin.
+			// Route images through Tachyon so it can handle S3 auth
+			// server-side. Direct presigned URLs fail because the CDN/proxy
+			// invalidates the S3 signature. Tachyon unpacks the presign
+			// params and makes its own S3 request, bypassing this issue.
 			if ( function_exists( 'tachyon_url' ) && wp_attachment_is_image( $attachment_id ) ) {
-				// Build the Tachyon URL from the unsigned base first (so
-				// tachyon_url adds its sizing params correctly), then merge
-				// the S3 signing params as a presign query parameter.
-				// Calling tachyon_url() on the already-signed URL produces
-				// a malformed URL with two '?' characters.
-				$tachyon_base = tachyon_url( $attachment_url );
 				$signing_query = wp_parse_url( $signed_url, PHP_URL_QUERY );
 				if ( $signing_query ) {
-					$separator = strpos( $tachyon_base, '?' ) !== false ? '&' : '?';
-					$signed_url = $tachyon_base . $separator . 'presign=' . rawurlencode( $signing_query );
-				} else {
-					$signed_url = $tachyon_base;
+					// If the content URL is already a Tachyon URL (e.g. after
+					// Tachyon's the_content filter at priority 999999), use it
+					// as the base to preserve its resize/fit params. Otherwise
+					// (e.g. REST API context), build the Tachyon URL first.
+					if ( strpos( $attachment['modified_url'], '/tachyon/' ) !== false ) {
+						$tachyon_base = $attachment['modified_url'];
+					} else {
+						$tachyon_base = tachyon_url( $attachment_url );
+					}
+					$signed_url = add_query_arg( 'presign', rawurlencode( $signing_query ), $tachyon_base );
 				}
 			}
 
@@ -195,3 +200,4 @@ function disable_srcset_in_preview( array $sources ) : array {
 
 	return $sources;
 }
+
