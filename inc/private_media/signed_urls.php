@@ -144,7 +144,19 @@ function replace_private_urls( string $content ) : string {
 			// Route images through Tachyon so it can handle resizing and
 			// forward the S3 signing params to the origin.
 			if ( function_exists( 'tachyon_url' ) && wp_attachment_is_image( $attachment_id ) ) {
-				$signed_url = tachyon_url( $signed_url );
+				// Build the Tachyon URL from the unsigned base first (so
+				// tachyon_url adds its sizing params correctly), then merge
+				// the S3 signing params as a presign query parameter.
+				// Calling tachyon_url() on the already-signed URL produces
+				// a malformed URL with two '?' characters.
+				$tachyon_base = tachyon_url( $attachment_url );
+				$signing_query = wp_parse_url( $signed_url, PHP_URL_QUERY );
+				if ( $signing_query ) {
+					$separator = strpos( $tachyon_base, '?' ) !== false ? '&' : '?';
+					$signed_url = $tachyon_base . $separator . 'presign=' . rawurlencode( $signing_query );
+				} else {
+					$signed_url = $tachyon_base;
+				}
 			}
 
 			$replaced = str_replace( $attachment['modified_url'], $signed_url, $content );
