@@ -103,6 +103,31 @@ class SanitisationTest extends \Codeception\TestCase\WPTestCase {
 		$this->assertEquals( '', $result['post_content'] );
 	}
 
+	public function testStripsAwsParamsWithHtmlEncodedAmpersands() {
+		$url = 'https://example.com/tachyon/2026/03/photo.jpg?presign=X-Amz-Content-Sha256%3DUNSIGNED-PAYLOAD%26X-Amz-Algorithm%3DAWS4-HMAC-SHA256&amp;fit=1024%2C683';
+		$content = sprintf( '<img src="%s" class="wp-image-1" />', $url );
+
+		$result = Sanitisation\strip_aws_params_from_content( $content );
+
+		$this->assertStringNotContainsString( 'presign', $result );
+		$this->assertStringContainsString( 'fit=1024%2C683', $result );
+		// Should preserve &amp; encoding.
+		$this->assertStringContainsString( 'photo.jpg?fit=1024%2C683', $result );
+		$this->assertStringNotContainsString( 'amp;fit', $result );
+	}
+
+	public function testPreservesMultipleNonAwsParamsWithHtmlAmpersands() {
+		$url = 'https://example.com/tachyon/photo.jpg?presign=abc&amp;fit=1024%2C683&amp;quality=80';
+		$content = sprintf( '<img src="%s" />', $url );
+
+		$result = Sanitisation\strip_aws_params_from_content( $content );
+
+		$this->assertStringNotContainsString( 'presign', $result );
+		$this->assertStringContainsString( 'fit=1024%2C683', $result );
+		$this->assertStringContainsString( 'quality=80', $result );
+		$this->assertStringContainsString( '&amp;', $result, 'Should preserve HTML-encoded ampersands.' );
+	}
+
 	public function testStripsXAmzS3HostParam() {
 		$url = 'https://example.com/uploads/photo.jpg?X-Amz-S3-Host=s3.amazonaws.com&w=800';
 		$content = sprintf( '<img src="%s" />', $url );

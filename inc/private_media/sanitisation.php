@@ -151,11 +151,18 @@ function strip_aws_params_from_content( string $content ) : string {
  * @return string Filtered query string.
  */
 function strip_aws_params_from_query( string $query, string $param_pattern ) : string {
+	// Normalise HTML-encoded ampersands before splitting.
+	$had_amp_entity = strpos( $query, '&amp;' ) !== false;
+	$normalised = str_replace( '&amp;', '&', $query );
+
 	// Split on & and filter out AWS params.
-	$parts = explode( '&', $query );
+	$parts = explode( '&', $normalised );
 	$parts = array_filter( $parts, function ( string $part ) use ( $param_pattern ) : bool {
 		return ! preg_match( '/^(' . $param_pattern . ')=/i', $part );
 	} );
 
-	return implode( '&', $parts );
+	// Restore the original separator style.
+	$separator = $had_amp_entity ? '&amp;' : '&';
+
+	return implode( $separator, $parts );
 }
