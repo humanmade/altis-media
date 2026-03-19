@@ -104,9 +104,14 @@ function replace_private_urls( string $content ) : string {
 			continue;
 		}
 
-		// Sign the cleaned attachment URL (no query params, canonical path)
-		// so the S3 signature is computed against the correct key.
-		$attachment_url = $attachment['attachment_url'];
+		// Use wp_get_attachment_url() for signing — it returns the S3 URL
+		// that S3 Uploads' get_s3_location_for_url() can resolve. The
+		// content-parsed URL (Tachyon or canonical WordPress path) cannot
+		// be resolved to an S3 location and signing would silently fail.
+		// Strip query params first since wp_get_attachment_url() already
+		// returns a signed URL for private attachments, and re-signing
+		// the same URL would produce an identical result.
+		$attachment_url = strtok( (string) wp_get_attachment_url( $attachment_id ), '?' );
 		$signed_url = \S3_Uploads\Plugin::get_instance()->add_s3_signed_params_to_attachment_url(
 			$attachment_url,
 			$attachment_id
