@@ -36,6 +36,12 @@ function bootstrap() {
  * @return string Content with signed URLs.
  */
 function replace_private_urls_in_preview( string $content ) : string {
+	// DEBUG: temporary logging.
+	error_log( sprintf(
+		'[Private Media] replace_private_urls_in_preview: is_preview=%s',
+		is_preview() ? 'true' : 'false'
+	) );
+
 	if ( ! is_preview() ) {
 		return $content;
 	}
@@ -96,11 +102,19 @@ function replace_private_urls( string $content ) : string {
 
 	$attachments = Content_Parser\extract_attachments_from_content( $content );
 
+	// DEBUG: temporary logging.
+	error_log( sprintf(
+		'[Private Media] replace_private_urls: found %d attachments, caller=%s',
+		count( $attachments ),
+		wp_debug_backtrace_summary( null, 0, false )[3] ?? 'unknown'
+	) );
+
 	foreach ( $attachments as $attachment ) {
 		$attachment_id = $attachment['attachment_id'];
 
 		// Only sign URLs for private attachments.
 		if ( Visibility\check_attachment_is_public( $attachment_id ) ) {
+			error_log( sprintf( '[Private Media]   attachment %d: skipped (public)', $attachment_id ) );
 			continue;
 		}
 
@@ -117,6 +131,15 @@ function replace_private_urls( string $content ) : string {
 			$attachment_id
 		);
 
+		// DEBUG: temporary logging.
+		error_log( sprintf(
+			'[Private Media]   attachment %d: modified_url=%s, attachment_url=%s, signed_differs=%s',
+			$attachment_id,
+			substr( $attachment['modified_url'], 0, 100 ),
+			substr( $attachment_url, 0, 100 ),
+			$signed_url !== $attachment_url ? 'YES' : 'NO'
+		) );
+
 		if ( $signed_url !== $attachment_url ) {
 			// Route images through Tachyon so it can handle resizing and
 			// forward the S3 signing params to the origin.
@@ -124,7 +147,16 @@ function replace_private_urls( string $content ) : string {
 				$signed_url = tachyon_url( $signed_url );
 			}
 
-			$content = str_replace( $attachment['modified_url'], $signed_url, $content );
+			$replaced = str_replace( $attachment['modified_url'], $signed_url, $content );
+			$did_replace = $replaced !== $content;
+			$content = $replaced;
+
+			error_log( sprintf(
+				'[Private Media]   attachment %d: str_replace matched=%s, signed_url=%s',
+				$attachment_id,
+				$did_replace ? 'YES' : 'NO',
+				substr( $signed_url, 0, 150 )
+			) );
 		}
 	}
 
