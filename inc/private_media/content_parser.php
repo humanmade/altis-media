@@ -160,8 +160,9 @@ function clean_url( string $url ) : string {
 	}
 
 	// Convert Tachyon URLs to canonical upload paths.
-	// Tachyon URLs typically follow the pattern: /tachyon/uploads/path/to/file.jpg
-	$url = preg_replace( '#/tachyon/(uploads/.+)$#', '/wp-content/$1', $url );
+	// Tachyon URLs may include the uploads/ prefix (e.g. /tachyon/uploads/2026/03/img.jpg)
+	// or omit it (e.g. /tachyon/2026/03/img.jpg) depending on the platform configuration.
+	$url = preg_replace( '#/tachyon/(uploads/)?(.+)$#', '/wp-content/uploads/$2', $url );
 
 	return $url;
 }
