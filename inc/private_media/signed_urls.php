@@ -19,10 +19,7 @@ use Altis\Media\Private_Media\Visibility;
  * @return void
  */
 function bootstrap() {
-	// Run after Tachyon's filter_the_content (priority 999999) so that
-	// Tachyon has already converted URLs and added resize params. We then
-	// append presign params to the Tachyon URLs using add_query_arg.
-	add_filter( 'the_content', __NAMESPACE__ . '\\replace_private_urls_in_preview', 1000000 );
+	add_filter( 'the_content', __NAMESPACE__ . '\\replace_private_urls_in_preview' );
 
 	// Register REST filters for all post types with editor support.
 	add_action( 'rest_api_init', __NAMESPACE__ . '\\register_rest_filters' );
@@ -80,13 +77,11 @@ function sign_rest_content( \WP_REST_Response $response, \WP_Post $post ) : \WP_
 
 	$data = $response->get_data();
 
-	// Sign URLs in rendered content only — never modify raw content.
-	// Raw content is what the block editor parses to reconstruct blocks
-	// and what gets saved back to the database. Injecting signed URLs
-	// there breaks block parsing and risks persisting expiring AWS
-	// credentials to the database.
-	if ( ! empty( $data['content']['rendered'] ) ) {
-		$data['content']['rendered'] = replace_private_urls( $data['content']['rendered'] );
+	// Sign URLs in raw content so the block editor can display private
+	// images. The sanitisation module strips AWS params on save, so
+	// signed URLs are never persisted to the database.
+	if ( ! empty( $data['content']['raw'] ) ) {
+		$data['content']['raw'] = replace_private_urls( $data['content']['raw'] );
 		$response->set_data( $data );
 	}
 
@@ -96,9 +91,9 @@ function sign_rest_content( \WP_REST_Response $response, \WP_Post $post ) : \WP_
 /**
  * Replace private media URLs in content with signed S3 URLs.
  *
- * Images are routed through Tachyon after signing so that the presign query
- * parameters are bundled correctly. Non-image files (PDFs, videos, etc.)
- * use the signed URL directly.
+ * Images are signed then passed through tachyon_url() so Tachyon receives
+ * the AWS params directly. Non-image files (PDFs, videos, etc.) use the
+ * signed URL directly.
  *
  * @param string $content The content to process.
  * @return string Content with private URLs replaced by signed ones.
@@ -149,24 +144,11 @@ function replace_private_urls( string $content ) : string {
 		) );
 
 		if ( $signed_url !== $attachment_url ) {
-			// Route images through Tachyon so it can handle S3 auth
-			// server-side. Direct presigned URLs fail because the CDN/proxy
-			// invalidates the S3 signature. Tachyon unpacks the presign
-			// params and makes its own S3 request, bypassing this issue.
+			// Route images through Tachyon so it can handle S3 auth.
+			// Pass the signed S3 URL directly to tachyon_url() so that
+			// Tachyon receives the AWS params as top-level query params.
 			if ( function_exists( 'tachyon_url' ) && wp_attachment_is_image( $attachment_id ) ) {
-				$signing_query = wp_parse_url( $signed_url, PHP_URL_QUERY );
-				if ( $signing_query ) {
-					// If the content URL is already a Tachyon URL (e.g. after
-					// Tachyon's the_content filter at priority 999999), use it
-					// as the base to preserve its resize/fit params. Otherwise
-					// (e.g. REST API context), build the Tachyon URL first.
-					if ( strpos( $attachment['modified_url'], '/tachyon/' ) !== false ) {
-						$tachyon_base = $attachment['modified_url'];
-					} else {
-						$tachyon_base = tachyon_url( $attachment_url );
-					}
-					$signed_url = add_query_arg( 'presign', rawurlencode( $signing_query ), $tachyon_base );
-				}
+				$signed_url = tachyon_url( $signed_url );
 			}
 
 			$replaced = str_replace( $attachment['modified_url'], $signed_url, $content );
