@@ -80,8 +80,13 @@ function sign_rest_content( \WP_REST_Response $response, \WP_Post $post ) : \WP_
 
 	$data = $response->get_data();
 
-	if ( ! empty( $data['content']['raw'] ) ) {
-		$data['content']['raw'] = replace_private_urls( $data['content']['raw'] );
+	// Sign URLs in rendered content only — never modify raw content.
+	// Raw content is what the block editor parses to reconstruct blocks
+	// and what gets saved back to the database. Injecting signed URLs
+	// there breaks block parsing and risks persisting expiring AWS
+	// credentials to the database.
+	if ( ! empty( $data['content']['rendered'] ) ) {
+		$data['content']['rendered'] = replace_private_urls( $data['content']['rendered'] );
 		$response->set_data( $data );
 	}
 
