@@ -28,7 +28,7 @@ function bootstrap() {
 
 	// Rewrite presigned URLs to use the canonical S3 endpoint so the
 	// signature matches the host the request will be sent to.
-	add_filter( 's3_uploads_presigned_url', __NAMESPACE__ . '\\rewrite_presigned_url_to_canonical_s3', 999 );
+	add_filter( 's3_uploads_presigned_url', __NAMESPACE__ . '\\rewrite_presigned_url_to_canonical_s3', 999, 2 );
 }
 
 /**
@@ -200,10 +200,16 @@ function disable_srcset_in_preview( array $sources ) : array {
  * `s3_uploads_presigned_url` may use a CDN or custom hostname.
  * Replacing the host ensures the signature matches the request.
  *
- * @param string $url The presigned URL.
- * @return string URL rewritten to the canonical S3 endpoint.
+ * @param string $url     The presigned URL.
+ * @param int    $post_id The attachment post ID.
+ * @return string URL rewritten to the canonical S3 endpoint, or unchanged for images.
  */
-function rewrite_presigned_url_to_canonical_s3( string $url ) : string {
+function rewrite_presigned_url_to_canonical_s3( string $url, int $post_id ) : string {
+	// Images are served through Tachyon, which handles S3 auth itself.
+	if ( wp_attachment_is_image( $post_id ) ) {
+		return $url;
+	}
+
 	if ( ! class_exists( '\\S3_Uploads\\Plugin' ) ) {
 		return $url;
 	}
