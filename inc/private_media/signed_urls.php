@@ -25,6 +25,10 @@ function bootstrap() {
 	add_action( 'rest_api_init', __NAMESPACE__ . '\\register_rest_filters' );
 
 	add_filter( 'wp_calculate_image_srcset', __NAMESPACE__ . '\\disable_srcset_in_preview', 10, 1 );
+
+	// Rewrite presigned URLs to use the canonical S3 endpoint so the
+	// signature matches the host the request will be sent to.
+	add_filter( 's3_uploads_presigned_url', __NAMESPACE__ . '\\rewrite_presigned_url_to_canonical_s3', 999 );
 }
 
 /**
@@ -186,5 +190,36 @@ function disable_srcset_in_preview( array $sources ) : array {
 	}
 
 	return $sources;
+}
+
+/**
+ * Rewrite a presigned URL to use the canonical S3 endpoint.
+ *
+ * The AWS SDK signs against the canonical S3 host
+ * (bucket.s3.region.amazonaws.com) but the URL passed through
+ * `s3_uploads_presigned_url` may use a CDN or custom hostname.
+ * Replacing the host ensures the signature matches the request.
+ *
+ * @param string $url The presigned URL.
+ * @return string URL rewritten to the canonical S3 endpoint.
+ */
+function rewrite_presigned_url_to_canonical_s3( string $url ) : string {
+	if ( ! class_exists( '\\S3_Uploads\\Plugin' ) ) {
+		return $url;
+	}
+
+	$instance = \S3_Uploads\Plugin::get_instance();
+	$bucket   = $instance->get_s3_bucket();
+	$region   = $instance->get_s3_bucket_region();
+	$s3_host  = sprintf( '%s.s3.%s.amazonaws.com', $bucket, $region ?: 'us-east-1' );
+
+	$parts = wp_parse_url( $url );
+
+	return sprintf(
+		'https://%s%s%s',
+		$s3_host,
+		$parts['path'] ?? '',
+		isset( $parts['query'] ) ? '?' . $parts['query'] : ''
+	);
 }
 
