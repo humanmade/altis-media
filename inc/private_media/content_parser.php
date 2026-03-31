@@ -74,8 +74,8 @@ function extract_attachments_from_content( string $content ) : array {
 		}
 	}
 
-	// 4. Gutenberg block attributes: "id":N,"src":"..." (e.g. video/file blocks).
-	if ( preg_match_all( '/"id"\s*:\s*(\d+)\s*,\s*"src"\s*:\s*"([^"]+)"/', $content, $matches, PREG_SET_ORDER ) ) {
+	// 4. Gutenberg block attributes: "id":N,"src":"..." or "id":N,"href":"..." (e.g. video/file blocks).
+	if ( preg_match_all( '/"id"\s*:\s*(\d+)\s*,\s*"(?:src|href)"\s*:\s*"([^"]+)"/', $content, $matches, PREG_SET_ORDER ) ) {
 		foreach ( $matches as $match ) {
 			$url = wp_unslash( $match[2] );
 			$results[] = [

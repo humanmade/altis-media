@@ -125,29 +125,24 @@ function replace_private_urls( string $content ) : string {
 			continue;
 		}
 
-		// Use wp_get_attachment_url() for signing — it returns the S3 URL
-		// that S3 Uploads' get_s3_location_for_url() can resolve. The
-		// content-parsed URL (Tachyon or canonical WordPress path) cannot
-		// be resolved to an S3 location and signing would silently fail.
-		// Strip query params first since wp_get_attachment_url() already
-		// returns a signed URL for private attachments, and re-signing
-		// the same URL would produce an identical result.
-		$attachment_url = strtok( (string) wp_get_attachment_url( $attachment_id ), '?' );
-		$signed_url = \S3_Uploads\Plugin::get_instance()->add_s3_signed_params_to_attachment_url(
-			$attachment_url,
-			$attachment_id
-		);
+		// wp_get_attachment_url() already returns a signed URL for private
+		// attachments — S3 Uploads hooks into the filter and signs via
+		// get_s3_location_for_url(). For non-images, the
+		// rewrite_presigned_url_to_canonical_s3 filter then rewrites the
+		// host to the canonical S3 endpoint, which can't be re-resolved
+		// by get_s3_location_for_url(). So we use the already-signed URL
+		// directly instead of stripping params and re-signing.
+		$signed_url = (string) wp_get_attachment_url( $attachment_id );
 
 		// DEBUG: temporary logging.
 		error_log( sprintf(
-			'[Private Media]   attachment %d: modified_url=%s, attachment_url=%s, signed_differs=%s',
+			'[Private Media]   attachment %d: modified_url=%s, signed_url=%s',
 			$attachment_id,
 			substr( $attachment['modified_url'], 0, 100 ),
-			substr( $attachment_url, 0, 100 ),
-			$signed_url !== $attachment_url ? 'YES' : 'NO'
+			substr( $signed_url, 0, 100 )
 		) );
 
-		if ( $signed_url !== $attachment_url ) {
+		if ( $signed_url !== $attachment['modified_url'] ) {
 			// Route images through Tachyon so it can handle S3 auth.
 			// Pass the signed S3 URL directly to tachyon_url() so that
 			// Tachyon receives the AWS params as top-level query params.
