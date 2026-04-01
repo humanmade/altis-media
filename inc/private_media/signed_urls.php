@@ -214,11 +214,20 @@ function rewrite_presigned_url_to_canonical_s3( string $url, int $post_id ) : st
 	$region   = $instance->get_s3_bucket_region();
 	$s3_host  = sprintf( '%s.s3.%s.amazonaws.com', $bucket, $region ?: 'us-east-1' );
 
+	// S3_UPLOADS_BUCKET may include a path prefix after the bucket name
+	// (e.g. "hmn-uploads-eu/platform-test"). The AWS SDK signs against the
+	// full S3 key including this prefix, so we must include it in the URL
+	// path for the signature to match.
+	$bucket_path_prefix = defined( 'S3_UPLOADS_BUCKET' )
+		? substr( S3_UPLOADS_BUCKET, strlen( $bucket ) )
+		: '';
+
 	$parts = wp_parse_url( $url );
 
 	return sprintf(
-		'https://%s%s%s',
+		'https://%s%s%s%s',
 		$s3_host,
+		$bucket_path_prefix,
 		$parts['path'] ?? '',
 		isset( $parts['query'] ) ? '?' . $parts['query'] : ''
 	);
