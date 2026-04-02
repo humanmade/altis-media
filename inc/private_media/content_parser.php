@@ -86,8 +86,8 @@ function extract_attachments_from_content( string $content ) : array {
 		}
 	}
 
-	// 5. Video blocks: <!-- wp:video {"id":N} --> with <video src="...">
-	if ( preg_match_all( '/<!--\s*wp:video\s+\{[^}]*"id"\s*:\s*(\d+)[^}]*\}\s*-->.*?(?:src|data-src)="([^"]+)"/s', $content, $matches, PREG_SET_ORDER ) ) {
+	// 5. Audio/Video blocks: <!-- wp:audio {"id":N} --> or <!-- wp:video {"id":N} --> with <audio/video src="...">
+	if ( preg_match_all( '/<!--\s*wp:(?:audio|video)\s+\{[^}]*"id"\s*:\s*(\d+)[^}]*\}\s*-->.*?(?:src|data-src)="([^"]+)"/s', $content, $matches, PREG_SET_ORDER ) ) {
 		foreach ( $matches as $match ) {
 			$results[] = [
 				'attachment_id' => (int) $match[1],
@@ -108,7 +108,18 @@ function extract_attachments_from_content( string $content ) : array {
 		}
 	}
 
-	// 7. Video blocks with wp-video-{id} class — src may be on a child element.
+	// 7. Audio blocks with wp-audio-{id} class — src may be on a child element.
+	if ( preg_match_all( '/class="[^"]*wp-audio-(\d+)[^"]*".*?(?:src|data-src)="([^"]+)"/s', $content, $matches, PREG_SET_ORDER ) ) {
+		foreach ( $matches as $match ) {
+			$results[] = [
+				'attachment_id' => (int) $match[1],
+				'attachment_url' => clean_url( $match[2] ),
+				'modified_url'  => $match[2],
+			];
+		}
+	}
+
+	// 8. Video blocks with wp-video-{id} class — src may be on a child element.
 	if ( preg_match_all( '/class="[^"]*wp-video-(\d+)[^"]*".*?(?:src|data-src)="([^"]+)"/s', $content, $matches, PREG_SET_ORDER ) ) {
 		foreach ( $matches as $match ) {
 			$results[] = [

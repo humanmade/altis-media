@@ -23,9 +23,10 @@ function bootstrap() {
 	add_action( 'transition_post_status', __NAMESPACE__ . '\\on_post_status_transition', 10, 3 );
 	add_action( 'save_post', __NAMESPACE__ . '\\on_save_post', 10, 2 );
 
-	// Add CSS classes to video and file block output for content parser detection.
+	// Add CSS classes to video, file and audio block output for content parser detection.
 	add_filter( 'render_block_core/video', __NAMESPACE__ . '\\add_video_block_class', 10, 2 );
 	add_filter( 'render_block_core/file', __NAMESPACE__ . '\\add_file_block_class', 10, 2 );
+	add_filter( 'render_block_core/audio', __NAMESPACE__ . '\\add_audio_block_class', 10, 2 );
 }
 
 /**
@@ -272,6 +273,34 @@ function add_file_block_class( string $block_content, array $block ) : string {
 	// Add class to the block wrapper element.
 	$block_content = preg_replace(
 		'/(<div\b[^>]*class="[^"]*wp-block-file[^"]*)(")/s',
+		'$1 ' . esc_attr( $class ) . '$2',
+		$block_content,
+		1
+	);
+
+	return $block_content;
+}
+
+/**
+ * Add wp-audio-{id} class to audio block output.
+ *
+ * This allows the content parser to identify audio attachments in rendered content.
+ *
+ * @param string $block_content The block content.
+ * @param array  $block         The block data.
+ * @return string Modified block content.
+ */
+function add_audio_block_class( string $block_content, array $block ) : string {
+	if ( empty( $block['attrs']['id'] ) ) {
+		return $block_content;
+	}
+
+	$id = (int) $block['attrs']['id'];
+	$class = 'wp-audio-' . $id;
+
+	// Add class to the <figure> wrapper.
+	$block_content = preg_replace(
+		'/(<figure\b[^>]*class="[^"]*)(")/s',
 		'$1 ' . esc_attr( $class ) . '$2',
 		$block_content,
 		1
