@@ -85,6 +85,42 @@ class ContentParserTest extends \Codeception\TestCase\WPTestCase {
 		$this->assertContains( 44, $ids );
 	}
 
+	public function testGutenbergIdHref() {
+		$content = '<!-- wp:file {"id":45,"href":"https:\/\/example.com\/uploads\/document.pdf"} -->';
+		$results = Content_Parser\extract_attachments_from_content( $content );
+
+		$this->assertCount( 1, $results );
+		$this->assertEquals( 45, $results[0]['attachment_id'] );
+		$this->assertStringContainsString( 'document.pdf', $results[0]['attachment_url'] );
+	}
+
+	public function testAudioBlockWithCommentAndSrc() {
+		$content = '<!-- wp:audio {"id":406} --><figure class="wp-block-audio"><audio controls src="https://example.com/uploads/2026/04/song.mp3"></audio></figure><!-- /wp:audio -->';
+		$results = Content_Parser\extract_attachments_from_content( $content );
+
+		$ids = array_column( $results, 'attachment_id' );
+		$this->assertContains( 406, $ids );
+	}
+
+	public function testAudioBlockWithWpAudioClass() {
+		$content = '<figure class="wp-block-audio wp-audio-55"><audio controls src="https://example.com/uploads/podcast.mp3"></audio></figure>';
+		$results = Content_Parser\extract_attachments_from_content( $content );
+
+		$ids = array_column( $results, 'attachment_id' );
+		$this->assertContains( 55, $ids );
+	}
+
+	public function testFileBlockFullMarkup() {
+		$content = '<!-- wp:file {"id":33,"href":"https://example.com/uploads/report.pdf"} -->'
+			. '<div class="wp-block-file"><a id="wp-block-file--media-33" href="https://example.com/uploads/report.pdf">Report</a>'
+			. '<a href="https://example.com/uploads/report.pdf" class="wp-block-file__button wp-element-button" download>Download</a></div>'
+			. '<!-- /wp:file -->';
+		$results = Content_Parser\extract_attachments_from_content( $content );
+
+		$ids = array_column( $results, 'attachment_id' );
+		$this->assertContains( 33, $ids );
+	}
+
 	public function testDeduplication() {
 		$content = '<img class="wp-image-5" src="https://example.com/a.jpg" />'
 			. '<img src="https://example.com/b.jpg" class="wp-image-5" />';

@@ -164,6 +164,132 @@ class PostLifecycleTest extends \Codeception\TestCase\WPTestCase {
 		remove_all_filters( 'private_media/post_meta_attachment_keys' );
 	}
 
+	public function testPublishMakesFileAttachmentPublic() {
+		$attachment_id = $this->create_test_attachment( [
+			'post_status'    => 'private',
+			'post_mime_type' => 'application/pdf',
+		] );
+		$post_id = $this->factory()->post->create( [
+			'post_status'  => 'draft',
+			'post_content' => sprintf(
+				'<!-- wp:file {"id":%d,"href":"https://example.com/uploads/doc.pdf"} -->'
+				. '<div class="wp-block-file"><a href="https://example.com/uploads/doc.pdf">Doc</a></div>'
+				. '<!-- /wp:file -->',
+				$attachment_id
+			),
+		] );
+
+		wp_update_post( [ 'ID' => $post_id, 'post_status' => 'publish' ] );
+
+		$this->assertEquals( 'publish', get_post_status( $attachment_id ) );
+		$this->assertContains( $post_id, Visibility\get_used_in_posts( $attachment_id ) );
+		$this->assertAclSetTo( $attachment_id, 'public-read' );
+	}
+
+	public function testPublishMakesAudioAttachmentPublic() {
+		$attachment_id = $this->create_test_attachment( [
+			'post_status'    => 'private',
+			'post_mime_type' => 'audio/mpeg',
+		] );
+		$post_id = $this->factory()->post->create( [
+			'post_status'  => 'draft',
+			'post_content' => sprintf(
+				'<!-- wp:audio {"id":%d} -->'
+				. '<figure class="wp-block-audio"><audio controls src="https://example.com/uploads/song.mp3"></audio></figure>'
+				. '<!-- /wp:audio -->',
+				$attachment_id
+			),
+		] );
+
+		wp_update_post( [ 'ID' => $post_id, 'post_status' => 'publish' ] );
+
+		$this->assertEquals( 'publish', get_post_status( $attachment_id ) );
+		$this->assertContains( $post_id, Visibility\get_used_in_posts( $attachment_id ) );
+		$this->assertAclSetTo( $attachment_id, 'public-read' );
+	}
+
+	public function testPublishMakesVideoAttachmentPublic() {
+		$attachment_id = $this->create_test_attachment( [
+			'post_status'    => 'private',
+			'post_mime_type' => 'video/mp4',
+		] );
+		$post_id = $this->factory()->post->create( [
+			'post_status'  => 'draft',
+			'post_content' => sprintf(
+				'<!-- wp:video {"id":%d} -->'
+				. '<figure class="wp-block-video"><video src="https://example.com/uploads/clip.mp4"></video></figure>'
+				. '<!-- /wp:video -->',
+				$attachment_id
+			),
+		] );
+
+		wp_update_post( [ 'ID' => $post_id, 'post_status' => 'publish' ] );
+
+		$this->assertEquals( 'publish', get_post_status( $attachment_id ) );
+		$this->assertContains( $post_id, Visibility\get_used_in_posts( $attachment_id ) );
+		$this->assertAclSetTo( $attachment_id, 'public-read' );
+	}
+
+	public function testUnpublishMakesAudioAttachmentPrivate() {
+		$attachment_id = $this->create_test_attachment( [
+			'post_status'    => 'publish',
+			'post_mime_type' => 'audio/mpeg',
+		], [
+			'altis_used_in_published_post' => [],
+		] );
+		$post_id = $this->factory()->post->create( [
+			'post_status'  => 'draft',
+			'post_content' => sprintf(
+				'<!-- wp:audio {"id":%d} -->'
+				. '<figure class="wp-block-audio"><audio controls src="https://example.com/uploads/song.mp3"></audio></figure>'
+				. '<!-- /wp:audio -->',
+				$attachment_id
+			),
+		] );
+
+		wp_update_post( [ 'ID' => $post_id, 'post_status' => 'publish' ] );
+		$this->acl_calls = [];
+
+		wp_update_post( [ 'ID' => $post_id, 'post_status' => 'draft' ] );
+
+		$this->assertEquals( 'private', get_post_status( $attachment_id ) );
+		$this->assertEmpty( Visibility\get_used_in_posts( $attachment_id ) );
+		$this->assertAclSetTo( $attachment_id, 'private' );
+	}
+
+	public function testMixedMediaPostLifecycle() {
+		$image_id = $this->create_test_attachment( [
+			'post_status'    => 'private',
+			'post_mime_type' => 'image/jpeg',
+		] );
+		$audio_id = $this->create_test_attachment( [
+			'post_status'    => 'private',
+			'post_mime_type' => 'audio/mpeg',
+		] );
+		$file_id = $this->create_test_attachment( [
+			'post_status'    => 'private',
+			'post_mime_type' => 'application/pdf',
+		] );
+
+		$post_id = $this->factory()->post->create( [
+			'post_status'  => 'draft',
+			'post_content' => sprintf(
+				'<img class="wp-image-%d" src="https://example.com/photo.jpg" />'
+				. '<!-- wp:audio {"id":%d} --><figure class="wp-block-audio"><audio controls src="https://example.com/song.mp3"></audio></figure><!-- /wp:audio -->'
+				. '<!-- wp:file {"id":%d,"href":"https://example.com/doc.pdf"} --><div class="wp-block-file"><a href="https://example.com/doc.pdf">Doc</a></div><!-- /wp:file -->',
+				$image_id,
+				$audio_id,
+				$file_id
+			),
+		] );
+
+		wp_update_post( [ 'ID' => $post_id, 'post_status' => 'publish' ] );
+
+		$this->assertEquals( 'publish', get_post_status( $image_id ), 'Image should be public.' );
+		$this->assertEquals( 'publish', get_post_status( $audio_id ), 'Audio should be public.' );
+		$this->assertEquals( 'publish', get_post_status( $file_id ), 'File should be public.' );
+	}
+
 	public function testIsAllowedPostType() {
 		$this->assertTrue( Post_Lifecycle\is_allowed_post_type( 'post' ) );
 		$this->assertTrue( Post_Lifecycle\is_allowed_post_type( 'page' ) );
