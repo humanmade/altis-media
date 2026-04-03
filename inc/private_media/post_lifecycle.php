@@ -27,6 +27,9 @@ function bootstrap() {
 	add_filter( 'render_block_core/video', __NAMESPACE__ . '\\add_video_block_class', 10, 2 );
 	add_filter( 'render_block_core/file', __NAMESPACE__ . '\\add_file_block_class', 10, 2 );
 	add_filter( 'render_block_core/audio', __NAMESPACE__ . '\\add_audio_block_class', 10, 2 );
+
+	// Track video poster images alongside the video attachment.
+	add_filter( 'private_media/post_attachment_ids', __NAMESPACE__ . '\\add_video_poster_ids', 10, 3 );
 }
 
 /**
@@ -307,4 +310,35 @@ function add_audio_block_class( string $block_content, array $block ) : string {
 	);
 
 	return $block_content;
+}
+
+/**
+ * Add video poster attachment IDs to the post's attachment list.
+ *
+ * Video blocks store a poster URL but not its attachment ID. This resolves
+ * poster URLs to attachment IDs so they are tracked for visibility transitions.
+ *
+ * @param int[]   $ids     Current attachment IDs.
+ * @param int     $post_id The post ID.
+ * @param WP_Post $post    The post object.
+ * @return int[] Updated attachment IDs.
+ */
+function add_video_poster_ids( array $ids, int $post_id, WP_Post $post ) : array {
+	if ( empty( $post->post_content ) ) {
+		return $ids;
+	}
+
+	if ( ! preg_match_all( '/<!--\s*wp:video\s+\{[^}]*"poster"\s*:\s*"([^"]+)"[^}]*\}/s', $post->post_content, $matches ) ) {
+		return $ids;
+	}
+
+	foreach ( $matches[1] as $poster_url ) {
+		$poster_url = wp_unslash( $poster_url );
+		$poster_id = attachment_url_to_postid( strtok( $poster_url, '?' ) );
+		if ( $poster_id > 0 ) {
+			$ids[] = $poster_id;
+		}
+	}
+
+	return $ids;
 }

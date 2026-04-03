@@ -101,7 +101,7 @@ function strip_aws_params_from_content( string $content ) : string {
 	// Match URLs containing AWS parameters and strip those params.
 	// This handles URLs in src="...", href="...", and JSON strings.
 	$content = preg_replace_callback(
-		'/((?:src|href|data-full-url|data-src)="[^"]*\?)([^"]*")/s',
+		'/((?:src|href|data-full-url|data-src|poster)="[^"]*\?)([^"]*")/s',
 		function ( $matches ) use ( $param_pattern ) {
 			$prefix = $matches[1];
 			$rest = $matches[2];
@@ -125,7 +125,7 @@ function strip_aws_params_from_content( string $content ) : string {
 
 	// Also handle URLs in JSON block attributes (escaped quotes).
 	$content = preg_replace_callback(
-		'/((?:"src"|"imageUrl"|"href")\s*:\s*"[^"]*\?)([^"]*")/s',
+		'/((?:"src"|"imageUrl"|"href"|"poster")\s*:\s*"[^"]*\?)([^"]*")/s',
 		function ( $matches ) use ( $param_pattern ) {
 			$prefix = $matches[1];
 			$rest = $matches[2];

@@ -31,7 +31,8 @@ function bootstrap() {
  * 3. Used in a published post → public
  * 4. Legacy attachment → public
  * 5. Site icon → public
- * 6. Default → private
+ * 6. Inherit status (predates private media) → public
+ * 7. Default → private
  *
  * @param int $attachment_id The attachment ID.
  * @return bool True if the attachment should be public.
@@ -72,7 +73,15 @@ function check_attachment_is_public( int $attachment_id ) : bool {
 		return true;
 	}
 
-	// 7. Default — private.
+	// 7. Inherit status — predates private media.
+	// New uploads are immediately set to 'private' by set_new_attachment_private(),
+	// so any attachment still at 'inherit' is a pre-existing upload from before the
+	// feature was enabled. Treat as public to avoid breaking existing content.
+	if ( get_post_status( $attachment_id ) === 'inherit' ) {
+		return true;
+	}
+
+	// 8. Default — private.
 	return false;
 }
 

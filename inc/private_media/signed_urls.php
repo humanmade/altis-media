@@ -150,9 +150,17 @@ function replace_private_urls( string $content ) : string {
 				$signed_url = tachyon_url( $signed_url );
 			}
 
+			// Replace unescaped URLs in HTML attributes.
 			$replaced = str_replace( $attachment['modified_url'], $signed_url, $content );
 			$did_replace = $replaced !== $content;
 			$content = $replaced;
+
+			// Also replace JSON-escaped URLs in block comments.
+			// Gutenberg stores URLs with escaped slashes (e.g. \/) in block
+			// attributes. The block editor reads from these, so we must sign them too.
+			$escaped_original = str_replace( '/', '\\/', $attachment['modified_url'] );
+			$escaped_signed = str_replace( '/', '\\/', $signed_url );
+			$content = str_replace( $escaped_original, $escaped_signed, $content );
 
 			error_log( sprintf(
 				'[Private Media]   attachment %d: str_replace matched=%s, signed_url=%s',
@@ -161,6 +169,49 @@ function replace_private_urls( string $content ) : string {
 				substr( $signed_url, 0, 150 )
 			) );
 		}
+	}
+
+	$content = replace_private_poster_urls( $content );
+
+	return $content;
+}
+
+/**
+ * Replace private video poster URLs with signed versions.
+ *
+ * Video blocks store a poster URL in both an HTML attribute and a JSON
+ * block comment attribute. This function signs both occurrences.
+ *
+ * @param string $content The content to process.
+ * @return string Content with signed poster URLs.
+ */
+function replace_private_poster_urls( string $content ) : string {
+	if ( ! preg_match_all( '/poster="([^"]+)"/', $content, $matches, PREG_SET_ORDER ) ) {
+		return $content;
+	}
+
+	foreach ( $matches as $match ) {
+		$poster_url = $match[1];
+		$clean = Content_Parser\clean_url( $poster_url );
+		$poster_id = attachment_url_to_postid( $clean );
+
+		if ( $poster_id <= 0 || Visibility\check_attachment_is_public( $poster_id ) ) {
+			continue;
+		}
+
+		$signed_url = (string) wp_get_attachment_url( $poster_id );
+
+		if ( function_exists( 'tachyon_url' ) ) {
+			$signed_url = tachyon_url( $signed_url );
+		}
+
+		// Replace in HTML attributes.
+		$content = str_replace( $poster_url, $signed_url, $content );
+
+		// Replace JSON-escaped form in block comments.
+		$escaped_original = str_replace( '/', '\\/', $poster_url );
+		$escaped_signed = str_replace( '/', '\\/', $signed_url );
+		$content = str_replace( $escaped_original, $escaped_signed, $content );
 	}
 
 	return $content;
@@ -202,6 +253,14 @@ function disable_srcset_in_preview( array $sources ) : array {
 function rewrite_presigned_url_to_canonical_s3( string $url, int $post_id ) : string {
 	// Images are served through Tachyon, which handles S3 auth itself.
 	if ( wp_attachment_is_image( $post_id ) ) {
+		return $url;
+	}
+
+	// PDF preview images are JPEG sub-sizes of the PDF attachment.
+	// wp_attachment_is_image() returns false for PDFs, but the preview
+	// image itself should go through Tachyon, not canonical S3.
+	$path = wp_parse_url( $url, PHP_URL_PATH );
+	if ( $path && preg_match( '/\.(jpe?g|png|gif|webp)$/i', strtok( $path, '?' ) ) ) {
 		return $url;
 	}
 
