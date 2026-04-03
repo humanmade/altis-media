@@ -56,27 +56,56 @@
 	} );
 
 	/**
-	 * Add lock icon overlay to private attachments in grid view.
+	 * Add visibility badge to an attachment preview element.
+	 *
+	 * - Private: lock icon (default state and forced-private).
+	 * - Forced public: globe icon (manual override).
+	 * - Naturally public (used in published content): no icon.
+	 *
+	 * @param {Object} view The Backbone attachment view instance.
 	 */
+	function addVisibilityBadge( view ) {
+		var override = view.model.get( 'privateMediaOverride' );
+		var isPublic = view.model.get( 'privateMediaIsPublic' );
+		var $preview = view.$el.find( '.attachment-preview' );
+
+		$preview.find( '.private-media-badge' ).remove();
+
+		if ( override === 'public' ) {
+			$preview.append(
+				'<span class="private-media-badge private-media-badge--forced-public dashicons dashicons-admin-site-alt3" title="Public (forced)"></span>'
+			);
+		} else if ( ! isPublic ) {
+			$preview.append(
+				'<span class="private-media-badge private-media-badge--private dashicons dashicons-lock" title="Private"></span>'
+			);
+		}
+	}
+
+	/**
+	 * Patch the render method of an Attachment view subclass to add the
+	 * visibility badge after the original render completes.
+	 */
+	function patchRender( ViewClass ) {
+		var originalRender = ViewClass.prototype.render;
+
+		ViewClass.prototype.render = function() {
+			originalRender.apply( this, arguments );
+			addVisibilityBadge( this );
+			return this;
+		};
+	}
+
+	// Patch the Library subclass (grid view on upload.php) and the base
+	// Attachment view (media modal). Library's render calls the original
+	// (pre-patch) Attachment render via a closure, so patching both is
+	// safe — only patch the base when Library does not exist.
 	if ( wp.media.view && wp.media.view.Attachment ) {
-		var OriginalAttachment = wp.media.view.Attachment;
-
-		wp.media.view.Attachment = OriginalAttachment.extend( {
-			render: function() {
-				OriginalAttachment.prototype.render.apply( this, arguments );
-
-				var status = this.model.get( 'status' );
-				this.$el.find( '.private-media-lock' ).remove();
-
-				if ( status === 'private' ) {
-					this.$el.find( '.attachment-preview' ).append(
-						'<span class="private-media-lock dashicons dashicons-lock" title="Private"></span>'
-					);
-				}
-
-				return this;
-			}
-		} );
+		if ( wp.media.view.Attachment.Library ) {
+			patchRender( wp.media.view.Attachment.Library );
+		} else {
+			patchRender( wp.media.view.Attachment );
+		}
 	}
 
 } )( jQuery, window.wp );

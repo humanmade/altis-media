@@ -66,6 +66,15 @@ The possible statuses are:
 - **Public (forced)** — you have manually set this file to always be public, regardless of whether it is used in published content.
 - **Private (forced)** — you have manually set this file to always be private, even if it is used in published content.
 
+### Grid View Badges
+
+In the default grid view, small icon badges in the top-right corner of each thumbnail indicate visibility at a glance:
+
+- **Lock icon** (dark badge) — the file is private. This is the most common badge since new uploads start as private.
+- **Globe icon** (blue badge) — the file has been manually forced public.
+- **No badge** — the file is naturally public because it is used in published content. This is the expected state for published
+  media, so no badge is shown to keep the grid clean.
+
 ### Changing Visibility with Quick Actions
 
 Hover over any file in the media library list to see the available quick actions:

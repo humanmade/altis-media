@@ -4,12 +4,11 @@
  * Lock icon overlay and status label styles for the media library.
  */
 
-/* Lock icon overlay on private attachments in grid view */
-.private-media-lock {
+/* Visibility badge overlay on attachments in grid view */
+.private-media-badge {
 	position: absolute;
 	top: 8px;
 	right: 8px;
-	background: rgba( 0, 0, 0, 0.7 );
 	color: #fff;
 	border-radius: 50%;
 	width: 28px;
@@ -19,6 +18,14 @@
 	font-size: 16px;
 	z-index: 10;
 	pointer-events: none;
+}
+
+.private-media-badge--private {
+	background: rgba( 0, 0, 0, 0.7 );
+}
+
+.private-media-badge--forced-public {
+	background: rgba( 0, 124, 186, 0.85 );
 }
 
 /* Ensure attachment preview is positioned for overlay */

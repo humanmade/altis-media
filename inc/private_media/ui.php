@@ -42,6 +42,9 @@ function bootstrap() {
 	add_filter( 'manage_media_columns', __NAMESPACE__ . '\\add_visibility_column' );
 	add_action( 'manage_media_custom_column', __NAMESPACE__ . '\\render_visibility_column', 10, 2 );
 
+	// Expose visibility data to the JS attachment model (grid view).
+	add_filter( 'wp_prepare_attachment_for_js', __NAMESPACE__ . '\\add_visibility_to_js', 10, 2 );
+
 	// Enqueue assets.
 	add_action( 'admin_enqueue_scripts', __NAMESPACE__ . '\\enqueue_assets' );
 
@@ -365,6 +368,20 @@ function render_visibility_column( string $column_name, int $post_id ) : void {
 }
 
 /**
+ * Add visibility data to the JS attachment model for grid view.
+ *
+ * @param array   $response   The prepared attachment response.
+ * @param WP_Post $attachment The attachment post.
+ * @return array Modified response.
+ */
+function add_visibility_to_js( array $response, WP_Post $attachment ) : array {
+	$response['privateMediaOverride'] = Visibility\get_override( $attachment->ID );
+	$response['privateMediaIsPublic'] = Visibility\check_attachment_is_public( $attachment->ID );
+
+	return $response;
+}
+
+/**
  * Add visibility field to media modal sidebar.
  *
  * @param array   $form_fields Existing form fields.
@@ -500,13 +517,14 @@ function enqueue_assets( string $hook_suffix ) : void {
 		return;
 	}
 
+	$base_dir = dirname( __DIR__, 2 );
 	$base_url = plugin_dir_url( dirname( __DIR__ ) );
 
 	wp_enqueue_script(
 		'private-media',
 		$base_url . 'assets/private-media.js',
 		[ 'jquery', 'media-views' ],
-		'1.0.0',
+		(string) filemtime( $base_dir . '/assets/private-media.js' ),
 		true
 	);
 
@@ -519,7 +537,7 @@ function enqueue_assets( string $hook_suffix ) : void {
 		'private-media',
 		$base_url . 'assets/private-media.css',
 		[],
-		'1.0.0'
+		(string) filemtime( $base_dir . '/assets/private-media.css' )
 	);
 }
 
