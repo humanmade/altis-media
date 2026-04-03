@@ -36,7 +36,7 @@ browse them in the media library, insert them into posts, and use them as featur
 
 When you publish a post or page, all the media used in it automatically becomes publicly accessible:
 
-- Images, videos and files embedded in the content are detected.
+- Images, videos, audio and files embedded in the content are detected.
 - The featured image (post thumbnail) is included.
 - The files' storage permissions are updated so they can be accessed by visitors.
 
@@ -177,14 +177,14 @@ For more advanced cases where files are associated with posts through non-standa
 scan results:
 
 ```php
-add_filter( 'private_media/post_attachment_ids', function ( array $ids, WP_Post $post ) : array {
+add_filter( 'private_media/post_attachment_ids', function ( array $ids, int $post_id, WP_Post $post ) : array {
     // Include files from a custom gallery field.
     $gallery_ids = get_post_meta( $post->ID, '_gallery_images', true );
     if ( is_array( $gallery_ids ) ) {
         $ids = array_merge( $ids, $gallery_ids );
     }
     return $ids;
-}, 10, 2 );
+}, 10, 3 );
 ```
 
 ## WP-CLI Commands
@@ -223,6 +223,7 @@ Re-evaluates the visibility of all files, correcting any inconsistencies. Suppor
 |-------------------------------------------|---------------------------------------------------------------------------|
 | `private_media/allowed_post_types`        | Array of post types to track for media references.                        |
 | `private_media/post_meta_attachment_keys` | Array of field names that store file IDs (like the featured image field). |
-| `private_media/post_attachment_ids`       | Array of file IDs found in a post. Receives `$ids` and `$post`.           |
+| `private_media/post_attachment_ids`       | Array of file IDs found in a post. Receives `$ids`, `$post_id`, and `$post`. |
 | `private_media/update_s3_acl`             | Intercept storage permission updates. Return non-null to short-circuit.   |
 | `private_media/purge_cdn_cache`           | Intercept CDN cache clearing. Return non-null to short-circuit.           |
+| `private_media/do_purge_cdn_cache`        | Action fired when CDN cache should be purged for an attachment.           |
