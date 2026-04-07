@@ -45,6 +45,11 @@ function bootstrap() {
 	// Expose visibility data to the JS attachment model (grid view).
 	add_filter( 'wp_prepare_attachment_for_js', __NAMESPACE__ . '\\add_visibility_to_js', 10, 2 );
 
+	// Sign sub-size URLs for non-image private attachments (PDF covers, video posters)
+	// that S3 Uploads can't resolve via get_s3_location_for_url(). Runs after S3 Uploads
+	// at priority 10 so we only handle URLs that came back unsigned.
+	add_filter( 'wp_get_attachment_image_src', __NAMESPACE__ . '\\sign_non_image_subsize_url', 11, 2 );
+
 	// Enqueue assets.
 	add_action( 'admin_enqueue_scripts', __NAMESPACE__ . '\\enqueue_assets' );
 
@@ -378,7 +383,115 @@ function add_visibility_to_js( array $response, WP_Post $attachment ) : array {
 	$response['privateMediaOverride'] = Visibility\get_override( $attachment->ID );
 	$response['privateMediaIsPublic'] = Visibility\check_attachment_is_public( $attachment->ID );
 
+	// For private non-image attachments with image sub-sizes (PDF covers,
+	// video posters), the URLs in $response['sizes'] and $response['image']
+	// were built by core before S3 Uploads' image_src filter could sign them
+	// (and S3 Uploads can't resolve them anyway — see sign_non_image_subsize_url).
+	// Re-sign each one here so the JS model has working URLs.
+	if (
+		! wp_attachment_is_image( $attachment->ID )
+		&& ! Visibility\check_attachment_is_public( $attachment->ID )
+		&& ! empty( $response['sizes'] )
+	) {
+		foreach ( $response['sizes'] as &$size_data ) {
+			if ( ! empty( $size_data['url'] ) ) {
+				$size_data['url'] = sign_cover_url_for_attachment( $size_data['url'], $attachment->ID );
+			}
+		}
+		unset( $size_data );
+
+		if ( ! empty( $response['image']['src'] ) ) {
+			$response['image']['src'] = sign_cover_url_for_attachment( $response['image']['src'], $attachment->ID );
+		}
+	}
+
 	return $response;
+}
+
+/**
+ * Filter callback: sign cover/poster sub-size URLs for non-image private
+ * attachments. Runs at priority 11 on `wp_get_attachment_image_src`, after
+ * S3 Uploads' own filter (priority 10) which fails to resolve the URL.
+ *
+ * @param array{0: string, 1: int, 2: int}|false $image   Image src array.
+ * @param int|string                              $post_id Attachment ID.
+ * @return array{0: string, 1: int, 2: int}|false
+ */
+function sign_non_image_subsize_url( $image, $post_id ) {
+	if ( $image === false || empty( $image[0] ) || ! $post_id ) {
+		return $image;
+	}
+
+	$post_id = (int) $post_id;
+
+	// Only process non-image attachments (PDFs, videos, etc.). Image
+	// attachments are signed correctly by S3 Uploads at priority 10.
+	if ( wp_attachment_is_image( $post_id ) ) {
+		return $image;
+	}
+
+	// Only sign URLs for private attachments.
+	if ( Visibility\check_attachment_is_public( $post_id ) ) {
+		return $image;
+	}
+
+	$image[0] = sign_cover_url_for_attachment( $image[0], $post_id );
+	return $image;
+}
+
+/**
+ * Sign a cover/poster sub-size URL belonging to a non-image attachment.
+ *
+ * S3 Uploads' `add_s3_signed_params_to_attachment_url()` will only sign a
+ * URL if `get_s3_location_for_url()` can resolve it, which it does for the
+ * upload baseurl (`https://site/uploads/...`) but not for regional S3 URLs
+ * (`https://bucket.s3.region.amazonaws.com/...`). PDF cover URLs come back
+ * with the regional host because they're derived from `wp_get_attachment_url`
+ * on the parent. We rewrite to the upload baseurl first so S3 Uploads can
+ * resolve and sign the URL against the cover's actual S3 key.
+ *
+ * Already-signed URLs are returned unchanged.
+ *
+ * @param string $url           The cover/poster URL to sign.
+ * @param int    $attachment_id The parent (non-image) attachment ID.
+ * @return string Signed URL, or unchanged if signing isn't possible.
+ */
+function sign_cover_url_for_attachment( string $url, int $attachment_id ) : string {
+	// Already signed — leave alone.
+	if ( strpos( $url, 'X-Amz-Signature' ) !== false ) {
+		return $url;
+	}
+
+	if ( ! class_exists( '\\S3_Uploads\\Plugin' ) ) {
+		return $url;
+	}
+
+	$upload_dir = wp_upload_dir();
+	if ( empty( $upload_dir['baseurl'] ) ) {
+		return $url;
+	}
+
+	// Strip any existing query, then rewrite the host+path so the URL starts
+	// with the upload baseurl. We preserve the part of the path after `/uploads/`.
+	$path = wp_parse_url( $url, PHP_URL_PATH );
+	if ( ! $path ) {
+		return $url;
+	}
+
+	$marker = '/uploads/';
+	$pos = strpos( $path, $marker );
+	if ( $pos === false ) {
+		return $url;
+	}
+
+	$relative = substr( $path, $pos + strlen( $marker ) );
+	$normalised = trailingslashit( $upload_dir['baseurl'] ) . $relative;
+
+	$plugin = \S3_Uploads\Plugin::get_instance();
+	$signed = $plugin->add_s3_signed_params_to_attachment_url( $normalised, $attachment_id );
+
+	// If signing failed (URL unchanged), fall back to the original URL.
+	return $signed === $normalised ? $url : $signed;
 }
 
 /**

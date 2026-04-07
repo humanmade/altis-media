@@ -53,9 +53,25 @@ The same re-evaluation happens when you edit a published post and remove an imag
 
 ## What You See in the Media Library
 
-### The Visibility Column
+### Grid View Badges
 
-The media library list view includes a **Visibility** column that shows the current access status of each file:
+The media library opens in grid view by default. Small icon badges in the top-right corner of each thumbnail indicate visibility
+at a glance:
+
+![Media library grid view showing visibility badges](./assets/private-media-grid.png)
+
+- **Lock icon** (dark badge) — the file is private. This is the most common badge since new uploads start as private.
+- **Globe icon** (blue badge) — the file has been manually forced public.
+- **No badge** — the file is naturally public because it is used in published content. This is the expected state for published
+  media, so no badge is shown to keep the grid clean.
+
+To change the visibility of a file from grid view, click its thumbnail to open the attachment details panel, then use the
+**Visibility Override** dropdown — see [Changing Visibility in the Media Browser](#changing-visibility-in-the-media-browser)
+below.
+
+### List View — the Visibility Column
+
+If you switch the media library to list view, a **Visibility** column shows the current access status of each file in plain text:
 
 ![Media library list view showing the Visibility column](./assets/private-media-list.png)
 
@@ -66,18 +82,9 @@ The possible statuses are:
 - **Public (forced)** — you have manually set this file to always be public, regardless of whether it is used in published content.
 - **Private (forced)** — you have manually set this file to always be private, even if it is used in published content.
 
-### Grid View Badges
+### Changing Visibility with Quick Actions (List View)
 
-In the default grid view, small icon badges in the top-right corner of each thumbnail indicate visibility at a glance:
-
-- **Lock icon** (dark badge) — the file is private. This is the most common badge since new uploads start as private.
-- **Globe icon** (blue badge) — the file has been manually forced public.
-- **No badge** — the file is naturally public because it is used in published content. This is the expected state for published
-  media, so no badge is shown to keep the grid clean.
-
-### Changing Visibility with Quick Actions
-
-Hover over any file in the media library list to see the available quick actions:
+Hover over any row in list view to see the available quick actions:
 
 ![Media library row actions showing Make Public and Make Private links](./assets/private-media-row-actions.png)
 
@@ -86,25 +93,29 @@ Hover over any file in the media library list to see the available quick actions
 - **Remove Override** — removes your manual setting and returns the file to automatic management (appears after you have used Make
   Public or Make Private).
 
-<!-- TODO: Add screenshot of success notice after changing visibility (assets/private-media-notice.png) -->
+After changing visibility, a confirmation notice appears at the top of the screen:
+
+![Success notice after changing attachment visibility](./assets/private-media-notice.png)
 
 ### Changing Visibility for Multiple Files
 
 To change the visibility of several files at once:
 
-1. Select the files using the checkboxes in the media library list.
-2. Choose **Set Visibility** from the **Bulk actions** dropdown.
-3. Click **Apply**.
-4. On the confirmation screen, choose the target visibility and click **Apply**.
+1. Switch the media library to list view.
+2. Select the files using the checkboxes.
+3. Choose **Set Visibility** from the **Bulk actions** dropdown.
+4. Click **Apply**.
+5. On the confirmation screen, choose the target visibility and click **Apply**.
 
-<!-- TODO: Add screenshot of the bulk action confirmation screen (assets/private-media-bulk-confirm.png) -->
+![Bulk visibility confirmation screen](./assets/private-media-bulk-confirm.png)
 
-### Changing Visibility in the Media Editor
+### Changing Visibility in the Media Browser
 
-When editing a post, click on a file in the media browser to see its details in the sidebar. The **Visibility Override** dropdown
-lets you change the visibility setting directly without leaving the editor.
+When editing a post, open the media browser (for example, by inserting an Image block and choosing **Media Library**) and click
+any file. The attachment details sidebar includes a **Visibility Override** dropdown that lets you change the visibility setting
+without leaving the editor.
 
-<!-- TODO: Add screenshot of the media modal sidebar showing visibility dropdown (assets/private-media-modal-sidebar.png) -->
+![Media browser sidebar showing the Visibility Override dropdown](./assets/private-media-modal-sidebar.png)
 
 The sidebar also shows:
 
@@ -116,12 +127,12 @@ The sidebar also shows:
 
 Posts and pages in the admin list include two additional quick actions for working with their media:
 
+![Post list row actions showing Publish image(s) and Unpublish image(s) links](./assets/private-media-post-actions.png)
+
 - **Publish image(s)** — scans the post content and ensures all files used in it are publicly accessible. Useful if images appear
   broken after a migration or configuration change.
 - **Unpublish image(s)** — removes the post's association with its files, which may cause them to become private if no other
   published posts use them.
-
-<!-- TODO: Add screenshot of post list row actions showing Publish/Unpublish image(s) (assets/private-media-post-actions.png) -->
 
 ## Previewing Draft Content
 
@@ -213,7 +224,7 @@ site with existing content.
 ### Set Visibility for a Specific File
 
 ```
-wp private-media set-visibility <public|private> <id|filename> [--dry-run]
+wp private-media set_visibility <public|private> <id|filename> [--dry-run]
 ```
 
 Manually set the visibility for a specific file by its ID or filename.
@@ -221,7 +232,7 @@ Manually set the visibility for a specific file by its ID or filename.
 ### Fix Inconsistencies
 
 ```
-wp private-media fix-attachments [--start-date=<date>] [--end-date=<date>] [--dry-run] [--verbose]
+wp private-media fix_attachments [--start-date=<date>] [--end-date=<date>] [--dry-run] [--verbose]
 ```
 
 Re-evaluates the visibility of all files, correcting any inconsistencies. Supports date range filtering for targeted fixes.
