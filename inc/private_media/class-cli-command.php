@@ -40,30 +40,48 @@ class CLI_Command extends \WP_CLI_Command {
 			WP_CLI::log( 'Dry run mode — no changes will be made.' );
 		}
 
-		$query = new WP_Query( [
+		// Count total up front so the progress bar is sized correctly.
+		$count_query = new WP_Query( [
 			'post_type'      => 'attachment',
 			'post_status'    => [ 'inherit', 'private' ],
-			'posts_per_page' => 100,
-			'paged'          => 1,
+			'posts_per_page' => 1,
 			'fields'         => 'ids',
 			'no_found_rows'  => false,
 		] );
 
-		$total = $query->found_posts;
+		$total = $count_query->found_posts;
 		$processed = 0;
 
 		WP_CLI::log( sprintf( 'Found %d attachments to migrate.', $total ) );
 
 		$progress = Utils\make_progress_bar( 'Migrating attachments', $total );
 
-		while ( $query->have_posts() ) {
-			foreach ( $query->posts as $attachment_id ) {
-				$metadata = wp_get_attachment_metadata( $attachment_id );
-				if ( ! is_array( $metadata ) ) {
-					$metadata = [];
-				}
+		// In dry-run mode we never modify rows, so we must paginate forward
+		// to walk the result set. In a real run, each row's status flips to
+		// 'publish' and falls out of the [inherit,private] filter, so the
+		// remaining rows on page 1 always shrink — but we still walk forward
+		// here to avoid relying on that side effect.
+		$page = 1;
+		do {
+			$query = new WP_Query( [
+				'post_type'      => 'attachment',
+				'post_status'    => [ 'inherit', 'private' ],
+				'posts_per_page' => 100,
+				'paged'          => $page,
+				'fields'         => 'ids',
+				'no_found_rows'  => true,
+			] );
 
+			if ( empty( $query->posts ) ) {
+				break;
+			}
+
+			foreach ( $query->posts as $attachment_id ) {
 				if ( ! $dry_run ) {
+					$metadata = wp_get_attachment_metadata( $attachment_id );
+					if ( ! is_array( $metadata ) ) {
+						$metadata = [];
+					}
 					$metadata['legacy_attachment'] = true;
 					wp_update_attachment_metadata( $attachment_id, $metadata );
 
@@ -79,20 +97,12 @@ class CLI_Command extends \WP_CLI_Command {
 				$progress->tick();
 			}
 
-			// Next page.
-			$query = new WP_Query( [
-				'post_type'      => 'attachment',
-				'post_status'    => [ 'inherit', 'private' ],
-				'posts_per_page' => 100,
-				'paged'          => 1,
-				'fields'         => 'ids',
-				'no_found_rows'  => false,
-			] );
-
-			if ( empty( $query->posts ) ) {
-				break;
+			// In a real run we stay on page 1 because processed rows fall
+			// out of the result set. In dry-run we advance to walk forward.
+			if ( $dry_run ) {
+				$page++;
 			}
-		}
+		} while ( $processed < $total );
 
 		$progress->finish();
 		WP_CLI::success( sprintf( '%d attachments %s.', $processed, $dry_run ? 'would be migrated' : 'migrated' ) );
