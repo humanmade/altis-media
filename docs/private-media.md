@@ -209,8 +209,17 @@ add_filter( 'private_media/post_attachment_ids', function ( array $ids, int $pos
 
 ## WP-CLI Commands
 
-The following commands are available for managing private media from the command line. All commands support `--dry-run` to preview
-changes without applying them.
+Three commands are available for managing private media from the command line. All of them support `--dry-run` to preview what
+would change without applying anything.
+
+### Which command should I use?
+
+| Situation                                                                            | Command                                       |
+|--------------------------------------------------------------------------------------|-----------------------------------------------|
+| First-time enable on a site that already has uploaded files                          | [`migrate`](#migrate-existing-uploads)        |
+| Force a single file public or private (or remove an override) from the shell         | [`set_visibility`](#set-visibility-for-a-specific-file) |
+| Repair drift after a content import, an SQL edit, or a filter change                 | [`fix_attachments`](#repair-attachment-references) |
+| Bulk-publish all media used by a single post                                         | Use the **Publish image(s)** row action in the Posts list (UI), not CLI |
 
 ### Migrate Existing Uploads
 
@@ -218,8 +227,24 @@ changes without applying them.
 wp private-media migrate [--dry-run]
 ```
 
-Marks all existing uploads as legacy (public) and ensures their status is correct. Run this when first enabling Private Media on a
-site with existing content.
+A **one-time** command for sites that already had uploaded files before Private Media was enabled. It walks every existing
+attachment and:
+
+1. Marks it as legacy by setting `legacy_attachment` in its metadata. Legacy attachments stay publicly accessible regardless of
+   whether they appear in any published post — they predate the feature, so the system doesn't try to retroactively decide
+   whether they "should" be private.
+2. Sets its `post_status` to `publish`.
+3. Updates the file's S3 ACL to `public-read`.
+
+You should run this **once**, immediately after enabling Private Media on a site with existing content. Running it a second time
+is harmless but unnecessary — there will be nothing left to migrate.
+
+Use `--dry-run` first to see how many attachments would be touched.
+
+```
+wp private-media migrate --dry-run
+wp private-media migrate
+```
 
 ### Set Visibility for a Specific File
 
@@ -227,15 +252,61 @@ site with existing content.
 wp private-media set_visibility <public|private> <id|filename> [--dry-run]
 ```
 
-Manually set the visibility for a specific file by its ID or filename.
+Sets a manual visibility override on a single attachment, equivalent to using the **Make Public** / **Make Private** row actions
+in the media library. The override takes absolute precedence over the automatic publish/unpublish lifecycle: a forced-private
+attachment stays private even if it's used in a published post, and a forced-public attachment stays public even if no post
+references it.
 
-### Fix Inconsistencies
+The attachment can be identified by its numeric ID or by filename:
+
+```
+wp private-media set_visibility public 123
+wp private-media set_visibility private my-document.pdf
+wp private-media set_visibility public 123 --dry-run
+```
+
+To **remove** an override and return an attachment to automatic management, use the **Remove Override** row action in the media
+library — there is currently no CLI equivalent.
+
+### Repair Attachment References
 
 ```
 wp private-media fix_attachments [--start-date=<date>] [--end-date=<date>] [--dry-run] [--verbose]
 ```
 
-Re-evaluates the visibility of all files, correcting any inconsistencies. Supports date range filtering for targeted fixes.
+Walks every published post in the given date range, re-scans its content for attachment references, and reconciles the visibility
+state of each referenced attachment. For each post it:
+
+1. Calls `get_post_attachment_ids()` to find every attachment used in the post — image blocks, the featured image, video posters,
+   custom fields registered via the `private_media/post_attachment_ids` filter, etc.
+2. Re-records each post → attachment reference (`add_post_reference`).
+3. Recomputes the correct visibility for each attachment based on its current overrides plus its full reference list, and applies
+   the result (post status flip + S3 ACL).
+4. Stores the fresh attachment-ID list back on the post in the `altis_private_media_post` meta.
+
+This is a **repair tool**, not part of the normal lifecycle. Reach for it when:
+
+- A bulk content import didn't fire `transition_post_status` and attachments are stuck private.
+- Someone edited posts via SQL or a script that bypassed WordPress hooks.
+- You changed `private_media/allowed_post_types`, `private_media/post_meta_attachment_keys`, or `private_media/post_attachment_ids`
+  and want existing posts to be re-scanned with the new configuration.
+- The "used in" reference list on attachments has drifted out of sync with reality.
+
+The default date range is the **last 30 days based on post date** (not modified date — so this won't catch posts that were
+imported with an old date but published recently). Override with `--start-date` and `--end-date`:
+
+```
+# Preview a single day
+wp private-media fix_attachments --start-date=2026-04-01 --end-date=2026-04-01 --dry-run
+
+# Repair the whole of last month, with per-post detail
+wp private-media fix_attachments --start-date=2026-03-01 --end-date=2026-03-31 --verbose
+
+# Repair everything (use a wide range)
+wp private-media fix_attachments --start-date=2000-01-01 --end-date=2099-12-31
+```
+
+`--verbose` prints one line per post showing how many attachments were found.
 
 ## Hooks and Filters Reference
 
