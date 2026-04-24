@@ -3,7 +3,7 @@
  * Private Media — Content Parser.
  *
  * Pure functions that extract attachment IDs and URLs from post content.
- * No side effects — used by post_lifecycle.php and other consumers.
+ * No side effects — used by post-lifecycle.php and other consumers.
  *
  * @package altis/media
  */
