@@ -11,6 +11,12 @@
 
 /**
  * Test Private Media UI features.
+ *
+ * These tests assume the project's altis config has `modules.media.private-media`
+ * enabled (the default). If a project disables it via composer.json, this suite
+ * will fail loudly — that's intentional, since the alternative (silently pinning
+ * it on per-test) requires runtime injection into the WP-under-test process and
+ * is more machinery than the signal is worth.
  */
 class PrivateMediaCest {
 
