@@ -27,7 +27,7 @@ function bootstrap() {
 	add_filter( 'post_row_actions', __NAMESPACE__ . '\\add_post_row_actions', 10, 2 );
 	add_filter( 'page_row_actions', __NAMESPACE__ . '\\add_post_row_actions', 10, 2 );
 
-	// Bulk action.
+	// Bulk actions.
 	add_filter( 'bulk_actions-upload', __NAMESPACE__ . '\\add_bulk_actions' );
 	add_filter( 'handle_bulk_actions-upload', __NAMESPACE__ . '\\handle_bulk_actions', 10, 3 );
 
@@ -58,9 +58,6 @@ function bootstrap() {
 
 	// Admin notices.
 	add_action( 'admin_notices', __NAMESPACE__ . '\\display_admin_notices' );
-
-	// Bulk action confirmation screen.
-	add_action( 'admin_action_private_media_bulk_visibility', __NAMESPACE__ . '\\bulk_visibility_confirmation' );
 }
 
 /**
@@ -225,18 +222,29 @@ function handle_row_actions() : void {
 }
 
 /**
- * Register bulk action in media list table.
+ * Register bulk visibility actions in the media list table.
+ *
+ * Three discrete actions are registered so each is self-contained: the user
+ * picks which visibility they want and Apply runs it inline via WP's normal
+ * bulk-action handling (with the `bulk-media` nonce already verified by core).
  *
  * @param array $actions Existing bulk actions.
  * @return array Modified bulk actions.
  */
 function add_bulk_actions( array $actions ) : array {
-	$actions['private_media_set_visibility'] = __( 'Set Visibility', 'altis' );
+	$actions['private_media_force_public']    = __( 'Set Visibility: Force Public', 'altis' );
+	$actions['private_media_force_private']   = __( 'Set Visibility: Force Private', 'altis' );
+	$actions['private_media_remove_override'] = __( 'Set Visibility: Automatic', 'altis' );
 	return $actions;
 }
 
 /**
- * Handle bulk visibility action.
+ * Handle the private-media bulk visibility actions inline.
+ *
+ * Runs in the same request as the bulk-form POST, so WP core has already
+ * verified the `bulk-media` nonce — no separate nonce or confirmation screen
+ * is needed. Result is communicated by adding a query arg to the redirect URL,
+ * which `display_admin_notices` picks up.
  *
  * @param string $redirect_to The redirect URL.
  * @param string $doaction    The action being taken.
@@ -244,87 +252,27 @@ function add_bulk_actions( array $actions ) : array {
  * @return string Modified redirect URL.
  */
 function handle_bulk_actions( string $redirect_to, string $doaction, array $post_ids ) : string {
-	if ( $doaction !== 'private_media_set_visibility' ) {
+	$map = [
+		'private_media_force_public'    => 'public',
+		'private_media_force_private'   => 'private',
+		'private_media_remove_override' => 'auto',
+	];
+
+	if ( ! isset( $map[ $doaction ] ) ) {
 		return $redirect_to;
 	}
 
-	// Redirect to confirmation screen.
-	$ids = implode( ',', array_map( 'intval', $post_ids ) );
-	return admin_url( 'admin.php?action=private_media_bulk_visibility&attachment_ids=' . $ids . '&_wpnonce=' . wp_create_nonce( 'private_media_bulk' ) );
-}
-
-/**
- * Display the bulk visibility confirmation screen.
- *
- * @return void
- */
-function bulk_visibility_confirmation() : void {
-	check_admin_referer( 'private_media_bulk' );
-
-	$ids_string = sanitize_text_field( $_GET['attachment_ids'] ?? '' );
-	$ids = array_filter( array_map( 'intval', explode( ',', $ids_string ) ) );
-
-	if ( empty( $ids ) ) {
-		wp_die( esc_html__( 'No attachments selected.', 'altis' ) );
-	}
-
-	// Handle form submission.
-	if ( isset( $_POST['private_media_bulk_submit'] ) ) {
-		check_admin_referer( 'private_media_bulk_apply' );
-		$target = sanitize_text_field( $_POST['visibility'] ?? 'auto' );
-
-		$count = 0;
-		foreach ( $ids as $id ) {
-			if ( current_user_can( 'edit_post', $id ) ) {
-				Visibility\set_override( $id, $target );
-				$count++;
-			}
+	$target = $map[ $doaction ];
+	$count  = 0;
+	foreach ( $post_ids as $id ) {
+		$id = (int) $id;
+		if ( current_user_can( 'edit_post', $id ) ) {
+			Visibility\set_override( $id, $target );
+			$count++;
 		}
-
-		wp_safe_redirect( add_query_arg( 'private_media_bulk_updated', $count, admin_url( 'upload.php' ) ) );
-		exit;
 	}
 
-	// Display confirmation form.
-	require_once ABSPATH . 'wp-admin/admin-header.php';
-	?>
-	<div class="wrap">
-		<h1><?php esc_html_e( 'Set Media Visibility', 'altis' ); ?></h1>
-		<p><?php printf( esc_html__( 'You are about to change visibility for %d attachment(s).', 'altis' ), count( $ids ) ); ?></p>
-
-		<form method="post">
-			<?php wp_nonce_field( 'private_media_bulk_apply' ); ?>
-			<input type="hidden" name="attachment_ids" value="<?php echo esc_attr( $ids_string ); ?>" />
-
-			<table class="form-table">
-				<tr>
-					<th scope="row"><label for="visibility"><?php esc_html_e( 'Target Visibility', 'altis' ); ?></label></th>
-					<td>
-						<select name="visibility" id="visibility">
-							<option value="public"><?php esc_html_e( 'Force Public', 'altis' ); ?></option>
-							<option value="private"><?php esc_html_e( 'Force Private', 'altis' ); ?></option>
-							<option value="auto"><?php esc_html_e( 'Remove Override (Automatic)', 'altis' ); ?></option>
-						</select>
-					</td>
-				</tr>
-			</table>
-
-			<h2><?php esc_html_e( 'Selected Attachments', 'altis' ); ?></h2>
-			<ul>
-			<?php foreach ( $ids as $id ) : ?>
-				<?php $post = get_post( $id ); ?>
-				<?php if ( $post ) : ?>
-					<li><?php echo esc_html( $post->post_title ); ?> (ID: <?php echo esc_html( $id ); ?>)</li>
-				<?php endif; ?>
-			<?php endforeach; ?>
-			</ul>
-
-			<?php submit_button( __( 'Apply', 'altis' ), 'primary', 'private_media_bulk_submit' ); ?>
-		</form>
-	</div>
-	<?php
-	require_once ABSPATH . 'wp-admin/admin-footer.php';
-	exit;
+	return add_query_arg( 'private_media_bulk_updated', $count, $redirect_to );
 }
 
 /**
