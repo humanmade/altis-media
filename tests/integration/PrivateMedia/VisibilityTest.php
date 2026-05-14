@@ -28,9 +28,22 @@ class VisibilityTest extends \Codeception\TestCase\WPTestCase {
 		parent::tearDown();
 	}
 
-	public function testDefaultIsPrivate() {
-		$id = $this->create_test_attachment();
+	public function testFeatureTrackedAttachmentDefaultsToPrivate() {
+		// An attachment with the ACL meta set (i.e. touched by the feature) and
+		// no other priority signals — overrides, post references, legacy flag,
+		// site icon — falls through to the default-private branch.
+		$id = $this->create_test_attachment( [ 'post_status' => 'private' ] );
+
 		$this->assertFalse( Visibility\check_attachment_is_public( $id ) );
+	}
+
+	public function testPreFeatureAttachmentIsPublic() {
+		// An attachment with no _altis_media_acl meta predates the feature.
+		// Without this safety net, enabling private media on an existing site
+		// would silently break every previously-uploaded image until migrate ran.
+		$id = $this->create_test_attachment();
+
+		$this->assertTrue( Visibility\check_attachment_is_public( $id ) );
 	}
 
 	public function testForcePrivateOverrideTakesPrecedence() {
@@ -84,14 +97,14 @@ class VisibilityTest extends \Codeception\TestCase\WPTestCase {
 		delete_option( 'site_icon' );
 	}
 
-	public function testSetAttachmentVisibilityUpdatesStatus() {
+	public function testSetAttachmentVisibilityUpdatesMeta() {
 		$id = $this->create_test_attachment( [ 'post_status' => 'private' ], [
 			'altis_override_visibility' => 'public',
 		] );
 
 		Visibility\set_attachment_visibility( $id );
 
-		$this->assertEquals( 'publish', get_post_status( $id ) );
+		$this->assertAclMeta( $id, 'public-read' );
 		$this->assertAclSetTo( $id, 'public-read' );
 	}
 
@@ -100,7 +113,7 @@ class VisibilityTest extends \Codeception\TestCase\WPTestCase {
 
 		Visibility\set_attachment_visibility( $id );
 
-		$this->assertEquals( 'private', get_post_status( $id ) );
+		$this->assertAclMeta( $id, 'private' );
 		$this->assertAclSetTo( $id, 'private' );
 	}
 
@@ -162,34 +175,27 @@ class VisibilityTest extends \Codeception\TestCase\WPTestCase {
 			'post_status'    => 'inherit',
 		] );
 
-		$this->assertEquals( 'private', get_post_status( $id ) );
+		$this->assertAclMeta( $id, 'private' );
 		$this->assertAclSetTo( $id, 'private' );
+		// Attachment post_status must stay at WP's default — the feature stores
+		// privacy in post meta, never in the status field. Use get_post_field
+		// to read the raw DB value; get_post_status() resolves 'inherit' to the
+		// parent's status (or 'publish' for orphans).
+		$this->assertEquals( 'inherit', get_post_field( 'post_status', $id ) );
 	}
 
-	public function testAuthorCanReadPrivateAttachment() {
+	public function testPrivateAttachmentStillUsableByAuthors() {
+		// Attachments live at WP's default `inherit` status regardless of
+		// their ACL meta, so authors retain the read access WP grants by
+		// default. This regression-guards against re-introducing a status flip
+		// that would re-trigger WP's read_private_posts cap check.
 		$author_id = $this->factory()->user->create( [ 'role' => 'author' ] );
 		$attachment_id = $this->create_test_attachment( [ 'post_status' => 'private' ] );
 
 		wp_set_current_user( $author_id );
 
-		// Authors have upload_files, so they should be able to read private attachments.
-		$this->assertTrue( current_user_can( 'read_post', $attachment_id ), 'Author should be able to read private attachments.' );
-
-		// wp_get_attachment_url should work for private attachments.
 		$url = wp_get_attachment_url( $attachment_id );
 		$this->assertNotFalse( $url, 'wp_get_attachment_url should work for authors with private attachments.' );
-
-		wp_set_current_user( 0 );
-	}
-
-	public function testSubscriberCannotReadPrivateAttachment() {
-		$subscriber_id = $this->factory()->user->create( [ 'role' => 'subscriber' ] );
-		$attachment_id = $this->create_test_attachment( [ 'post_status' => 'private' ] );
-
-		wp_set_current_user( $subscriber_id );
-
-		// Subscribers don't have upload_files, so they should NOT be able to read.
-		$this->assertFalse( current_user_can( 'read_post', $attachment_id ), 'Subscriber should not be able to read private attachments.' );
 
 		wp_set_current_user( 0 );
 	}

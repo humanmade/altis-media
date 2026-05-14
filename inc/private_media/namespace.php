@@ -42,15 +42,13 @@ function is_private_media_active() : bool {
 /**
  * Bootstrap the private media feature.
  *
- * Query compatibility always runs (even when inactive) to prevent data loss.
- * All other hooks are gated behind is_private_media_active().
+ * All hooks are gated behind is_private_media_active(). When disabled, the
+ * feature leaves no runtime footprint — attachments stay at WP's default
+ * `inherit` status and the `_altis_media_acl` post meta is simply ignored.
  *
  * @return void
  */
 function bootstrap() {
-	// Query compat always runs — prevents data loss when feature is toggled off.
-	Query_Compat\bootstrap();
-
 	// Check config-level disable (safe to check early — no WP functions needed).
 	$config = Altis\get_config()['modules']['media'] ?? [];
 	if ( isset( $config['private-media'] ) && $config['private-media'] === false ) {

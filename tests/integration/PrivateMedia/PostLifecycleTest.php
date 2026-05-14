@@ -42,7 +42,7 @@ class PostLifecycleTest extends \Codeception\TestCase\WPTestCase {
 			'post_status' => 'publish',
 		] );
 
-		$this->assertEquals( 'publish', get_post_status( $attachment_id ) );
+		$this->assertAclMeta( $attachment_id, 'public-read' );
 		$this->assertContains( $post_id, Visibility\get_used_in_posts( $attachment_id ) );
 		$this->assertAclSetTo( $attachment_id, 'public-read' );
 	}
@@ -62,7 +62,7 @@ class PostLifecycleTest extends \Codeception\TestCase\WPTestCase {
 
 		wp_update_post( [ 'ID' => $post_id, 'post_status' => 'draft' ] );
 
-		$this->assertEquals( 'private', get_post_status( $attachment_id ) );
+		$this->assertAclMeta( $attachment_id, 'private' );
 		$this->assertEmpty( Visibility\get_used_in_posts( $attachment_id ) );
 		$this->assertAclSetTo( $attachment_id, 'private' );
 	}
@@ -83,7 +83,7 @@ class PostLifecycleTest extends \Codeception\TestCase\WPTestCase {
 		// Publish.
 		wp_update_post( [ 'ID' => $post_id, 'post_status' => 'publish' ] );
 
-		$this->assertEquals( 'publish', get_post_status( $attachment_id ), 'Featured image should become publish.' );
+		$this->assertAclMeta( $attachment_id, 'public-read' );
 		$this->assertContains( $post_id, Visibility\get_used_in_posts( $attachment_id ) );
 
 		wp_set_current_user( 0 );
@@ -103,7 +103,7 @@ class PostLifecycleTest extends \Codeception\TestCase\WPTestCase {
 		// Unpublish one — should stay public.
 		wp_update_post( [ 'ID' => $post1, 'post_status' => 'draft' ] );
 
-		$this->assertEquals( 'publish', get_post_status( $attachment_id ) );
+		$this->assertAclMeta( $attachment_id, 'public-read' );
 		$this->assertContains( $post2, Visibility\get_used_in_posts( $attachment_id ) );
 	}
 
@@ -126,8 +126,8 @@ class PostLifecycleTest extends \Codeception\TestCase\WPTestCase {
 		// Force the lifecycle to process (since the post was created as publish).
 		Post_Lifecycle\handle_publish( get_post( $post_id ) );
 
-		$this->assertEquals( 'publish', get_post_status( $att1 ) );
-		$this->assertEquals( 'publish', get_post_status( $att2 ) );
+		$this->assertAclMeta( $att1, 'public-read' );
+		$this->assertAclMeta( $att2, 'public-read' );
 
 		// Remove att2 from content and resave.
 		$content_one = sprintf( '<img class="wp-image-%d" src="https://example.com/a.jpg" />', $att1 );
@@ -136,8 +136,8 @@ class PostLifecycleTest extends \Codeception\TestCase\WPTestCase {
 		// Manually call resave handler since save_post fires during transition_post_status context.
 		Post_Lifecycle\handle_resave( get_post( $post_id ) );
 
-		$this->assertEquals( 'publish', get_post_status( $att1 ), 'att1 should still be public.' );
-		$this->assertEquals( 'private', get_post_status( $att2 ), 'att2 should now be private.' );
+		$this->assertAclMeta( $att1, 'public-read' );
+		$this->assertAclMeta( $att2, 'private' );
 	}
 
 	public function testFilterExtensibility() {
@@ -158,7 +158,7 @@ class PostLifecycleTest extends \Codeception\TestCase\WPTestCase {
 
 		wp_update_post( [ 'ID' => $post_id, 'post_status' => 'publish' ] );
 
-		$this->assertEquals( 'publish', get_post_status( $attachment_id ) );
+		$this->assertAclMeta( $attachment_id, 'public-read' );
 
 		// Clean up.
 		remove_all_filters( 'private_media/post_meta_attachment_keys' );
@@ -181,7 +181,7 @@ class PostLifecycleTest extends \Codeception\TestCase\WPTestCase {
 
 		wp_update_post( [ 'ID' => $post_id, 'post_status' => 'publish' ] );
 
-		$this->assertEquals( 'publish', get_post_status( $attachment_id ) );
+		$this->assertAclMeta( $attachment_id, 'public-read' );
 		$this->assertContains( $post_id, Visibility\get_used_in_posts( $attachment_id ) );
 		$this->assertAclSetTo( $attachment_id, 'public-read' );
 	}
@@ -203,7 +203,7 @@ class PostLifecycleTest extends \Codeception\TestCase\WPTestCase {
 
 		wp_update_post( [ 'ID' => $post_id, 'post_status' => 'publish' ] );
 
-		$this->assertEquals( 'publish', get_post_status( $attachment_id ) );
+		$this->assertAclMeta( $attachment_id, 'public-read' );
 		$this->assertContains( $post_id, Visibility\get_used_in_posts( $attachment_id ) );
 		$this->assertAclSetTo( $attachment_id, 'public-read' );
 	}
@@ -225,7 +225,7 @@ class PostLifecycleTest extends \Codeception\TestCase\WPTestCase {
 
 		wp_update_post( [ 'ID' => $post_id, 'post_status' => 'publish' ] );
 
-		$this->assertEquals( 'publish', get_post_status( $attachment_id ) );
+		$this->assertAclMeta( $attachment_id, 'public-read' );
 		$this->assertContains( $post_id, Visibility\get_used_in_posts( $attachment_id ) );
 		$this->assertAclSetTo( $attachment_id, 'public-read' );
 	}
@@ -252,7 +252,7 @@ class PostLifecycleTest extends \Codeception\TestCase\WPTestCase {
 
 		wp_update_post( [ 'ID' => $post_id, 'post_status' => 'draft' ] );
 
-		$this->assertEquals( 'private', get_post_status( $attachment_id ) );
+		$this->assertAclMeta( $attachment_id, 'private' );
 		$this->assertEmpty( Visibility\get_used_in_posts( $attachment_id ) );
 		$this->assertAclSetTo( $attachment_id, 'private' );
 	}
@@ -285,9 +285,9 @@ class PostLifecycleTest extends \Codeception\TestCase\WPTestCase {
 
 		wp_update_post( [ 'ID' => $post_id, 'post_status' => 'publish' ] );
 
-		$this->assertEquals( 'publish', get_post_status( $image_id ), 'Image should be public.' );
-		$this->assertEquals( 'publish', get_post_status( $audio_id ), 'Audio should be public.' );
-		$this->assertEquals( 'publish', get_post_status( $file_id ), 'File should be public.' );
+		$this->assertAclMeta( $image_id, 'public-read' );
+		$this->assertAclMeta( $audio_id, 'public-read' );
+		$this->assertAclMeta( $file_id, 'public-read' );
 	}
 
 	public function testIsAllowedPostType() {

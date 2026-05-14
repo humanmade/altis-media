@@ -162,9 +162,9 @@ precedence.
 
 ### Disabling the Feature
 
-Set `private-media` to `false` in your Altis configuration to disable the feature entirely. When disabled, a compatibility layer
-remains active to ensure any files that were previously set to private status are still included in media queries, preventing
-them from disappearing.
+Set `private-media` to `false` in your Altis configuration to disable the feature entirely. When disabled, the feature leaves no
+runtime footprint: attachments stay at WordPress's default `inherit` status and the `_altis_media_acl` post meta that records
+each file's S3 ACL state is simply ignored. Re-enabling the feature later restores the existing values without any migration.
 
 ### Adding Custom Post Types
 
@@ -233,7 +233,7 @@ attachment and:
 1. Marks it as legacy by setting `legacy_attachment` in its metadata. Legacy attachments stay publicly accessible regardless of
    whether they appear in any published post — they predate the feature, so the system doesn't try to retroactively decide
    whether they "should" be private.
-2. Sets its `post_status` to `publish`.
+2. Records its ACL state by setting the `_altis_media_acl` post meta to `public-read`.
 3. Updates the file's S3 ACL to `public-read`.
 
 You should run this **once**, immediately after enabling Private Media on a site with existing content. Running it a second time
@@ -281,7 +281,7 @@ state of each referenced attachment. For each post it:
    custom fields registered via the `private_media/post_attachment_ids` filter, etc.
 2. Re-records each post → attachment reference (`add_post_reference`).
 3. Recomputes the correct visibility for each attachment based on its current overrides plus its full reference list, and applies
-   the result (post status flip + S3 ACL).
+   the result (ACL meta update + S3 ACL).
 4. Stores the fresh attachment-ID list back on the post in the `altis_private_media_post` meta.
 
 This is a **repair tool**, not part of the normal lifecycle. Reach for it when:

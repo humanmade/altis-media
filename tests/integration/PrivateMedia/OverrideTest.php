@@ -34,7 +34,7 @@ class OverrideTest extends \Codeception\TestCase\WPTestCase {
 		Visibility\set_override( $id, 'public' );
 
 		$this->assertTrue( Visibility\check_attachment_is_public( $id ) );
-		$this->assertEquals( 'publish', get_post_status( $id ) );
+		$this->assertAclMeta( $id, 'public-read' );
 		$this->assertAclSetTo( $id, 'public-read' );
 	}
 
@@ -46,7 +46,7 @@ class OverrideTest extends \Codeception\TestCase\WPTestCase {
 		Visibility\set_override( $id, 'private' );
 
 		$this->assertFalse( Visibility\check_attachment_is_public( $id ) );
-		$this->assertEquals( 'private', get_post_status( $id ) );
+		$this->assertAclMeta( $id, 'private' );
 		$this->assertAclSetTo( $id, 'private' );
 	}
 

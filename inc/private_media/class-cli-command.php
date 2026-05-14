@@ -21,8 +21,10 @@ class CLI_Command extends \WP_CLI_Command {
 	/**
 	 * Migrate existing attachments for private media support.
 	 *
-	 * Marks all existing attachments as legacy and sets their post_status to 'publish'.
-	 * This ensures existing content continues to work after enabling the feature.
+	 * Marks all attachments that lack the `_altis_media_acl` meta key as
+	 * legacy (so they stay publicly accessible regardless of post-reference
+	 * state) and sets their ACL meta to `public-read`. Run this once after
+	 * enabling Private Media on a site with existing uploads.
 	 *
 	 * ## OPTIONS
 	 *
@@ -40,13 +42,19 @@ class CLI_Command extends \WP_CLI_Command {
 			WP_CLI::log( 'Dry run mode — no changes will be made.' );
 		}
 
-		// Count total up front so the progress bar is sized correctly.
+		// Count up front so the progress bar is sized correctly.
 		$count_query = new WP_Query( [
 			'post_type'      => 'attachment',
-			'post_status'    => [ 'inherit', 'private' ],
+			'post_status'    => 'inherit',
 			'posts_per_page' => 1,
 			'fields'         => 'ids',
 			'no_found_rows'  => false,
+			'meta_query'     => [
+				[
+					'key'     => Visibility\META_KEY,
+					'compare' => 'NOT EXISTS',
+				],
+			],
 		] );
 
 		$total = $count_query->found_posts;
@@ -56,20 +64,24 @@ class CLI_Command extends \WP_CLI_Command {
 
 		$progress = Utils\make_progress_bar( 'Migrating attachments', $total );
 
-		// In dry-run mode we never modify rows, so we must paginate forward
-		// to walk the result set. In a real run, each row's status flips to
-		// 'publish' and falls out of the [inherit,private] filter, so the
-		// remaining rows on page 1 always shrink — but we still walk forward
-		// here to avoid relying on that side effect.
+		// In a real run, each processed row gets the meta key set and falls
+		// out of the "NOT EXISTS" filter, so page 1 always shrinks. In dry-run
+		// we never mutate so we paginate forward to walk the result set.
 		$page = 1;
 		do {
 			$query = new WP_Query( [
 				'post_type'      => 'attachment',
-				'post_status'    => [ 'inherit', 'private' ],
+				'post_status'    => 'inherit',
 				'posts_per_page' => 100,
 				'paged'          => $page,
 				'fields'         => 'ids',
 				'no_found_rows'  => true,
+				'meta_query'     => [
+					[
+						'key'     => Visibility\META_KEY,
+						'compare' => 'NOT EXISTS',
+					],
+				],
 			] );
 
 			if ( empty( $query->posts ) ) {
@@ -85,10 +97,7 @@ class CLI_Command extends \WP_CLI_Command {
 					$metadata['legacy_attachment'] = true;
 					wp_update_attachment_metadata( $attachment_id, $metadata );
 
-					wp_update_post( [
-						'ID'          => $attachment_id,
-						'post_status' => 'publish',
-					] );
+					update_post_meta( $attachment_id, Visibility\META_KEY, 'public-read' );
 
 					Visibility\update_s3_acl( $attachment_id, 'public-read' );
 				}
@@ -97,8 +106,6 @@ class CLI_Command extends \WP_CLI_Command {
 				$progress->tick();
 			}
 
-			// In a real run we stay on page 1 because processed rows fall
-			// out of the result set. In dry-run we advance to walk forward.
 			if ( $dry_run ) {
 				$page++;
 			}

@@ -11,6 +11,14 @@
 namespace Altis\Media\Private_Media\Visibility;
 
 /**
+ * Post meta key storing the S3 ACL state for an attachment.
+ *
+ * Values: `'private'` or `'public-read'` — the literal S3 ACL strings.
+ * Absent meta means the attachment predates the feature.
+ */
+const META_KEY = '_altis_media_acl';
+
+/**
  * Bootstrap visibility hooks.
  *
  * @return void
@@ -19,7 +27,6 @@ function bootstrap() {
 	add_action( 'add_attachment', __NAMESPACE__ . '\\set_new_attachment_private' );
 	add_filter( 's3_uploads_is_attachment_private', __NAMESPACE__ . '\\filter_is_attachment_private', 10, 2 );
 	add_filter( 's3_uploads_private_attachment_url_expiry', __NAMESPACE__ . '\\filter_private_url_expiry', 10, 2 );
-	add_filter( 'map_meta_cap', __NAMESPACE__ . '\\grant_private_attachment_read', 10, 4 );
 }
 
 /**
@@ -30,8 +37,8 @@ function bootstrap() {
  * 2. Force-public override → public
  * 3. Used in a published post → public
  * 4. Legacy attachment → public
- * 5. Site icon → public
- * 6. Inherit status (predates private media) → public
+ * 5. Site icon (metadata flag or option) → public
+ * 6. No `_altis_media_acl` meta (predates the feature) → public
  * 7. Default → private
  *
  * @param int $attachment_id The attachment ID.
@@ -73,11 +80,12 @@ function check_attachment_is_public( int $attachment_id ) : bool {
 		return true;
 	}
 
-	// 7. Inherit status — predates private media.
-	// New uploads are immediately set to 'private' by set_new_attachment_private(),
-	// so any attachment still at 'inherit' is a pre-existing upload from before the
-	// feature was enabled. Treat as public to avoid breaking existing content.
-	if ( get_post_status( $attachment_id ) === 'inherit' ) {
+	// 7. No _altis_media_acl meta — pre-feature upload.
+	// New uploads get the meta set to 'private' immediately by set_new_attachment_private(),
+	// and set_attachment_visibility() writes the meta on every transition. An attachment
+	// with no meta has never been touched by the feature, so treat as public to avoid
+	// breaking content that predates the rollout.
+	if ( get_post_meta( $attachment_id, META_KEY, true ) === '' ) {
 		return true;
 	}
 
@@ -88,7 +96,9 @@ function check_attachment_is_public( int $attachment_id ) : bool {
 /**
  * Set the visibility of an attachment based on the public check logic.
  *
- * Updates both post_status and S3 ACL.
+ * Writes the ACL meta and updates the S3 ACL. Does not touch post_status —
+ * attachments stay at WP's default `inherit` so the cap system, admin queries,
+ * and third-party plugins behave normally.
  *
  * @param int $attachment_id The attachment ID.
  * @return void
@@ -98,24 +108,9 @@ function set_attachment_visibility( int $attachment_id ) : void {
 	is_attachment_private_cached( $attachment_id, true );
 
 	$is_public = check_attachment_is_public( $attachment_id );
-	$new_status = $is_public ? 'publish' : 'private';
 	$new_acl = $is_public ? 'public-read' : 'private';
 
-	$current_status = get_post_status( $attachment_id );
-
-	if ( $current_status !== $new_status ) {
-		// Use a direct DB update instead of wp_update_post() to avoid
-		// triggering nested hook cascades (e.g. image srcset generation)
-		// that can cause out-of-memory errors when called from within
-		// the parent post's transition_post_status handler.
-		global $wpdb;
-		$wpdb->update(
-			$wpdb->posts,
-			[ 'post_status' => $new_status ],
-			[ 'ID' => $attachment_id ]
-		);
-		clean_post_cache( $attachment_id );
-	}
+	update_post_meta( $attachment_id, META_KEY, $new_acl );
 
 	update_s3_acl( $attachment_id, $new_acl );
 	purge_cdn_cache( $attachment_id );
@@ -184,7 +179,7 @@ function purge_cdn_cache( int $attachment_id ) : void {
 }
 
 /**
- * Set newly uploaded attachments to private status.
+ * Set newly uploaded attachments to private.
  *
  * Hooked to 'add_attachment'.
  *
@@ -192,11 +187,7 @@ function purge_cdn_cache( int $attachment_id ) : void {
  * @return void
  */
 function set_new_attachment_private( int $attachment_id ) : void {
-	wp_update_post( [
-		'ID'          => $attachment_id,
-		'post_status' => 'private',
-	] );
-
+	update_post_meta( $attachment_id, META_KEY, 'private' );
 	update_s3_acl( $attachment_id, 'private' );
 }
 
@@ -317,40 +308,6 @@ function set_used_in_posts( int $attachment_id, array $post_ids ) : void {
 	}
 
 	wp_update_attachment_metadata( $attachment_id, $metadata );
-}
-
-/**
- * Grant read access to private attachments for users who can upload files.
- *
- * WordPress maps 'read_post' for private posts to 'read_private_posts', which
- * authors and contributors lack. This filter downgrades the capability requirement
- * for private attachments so that any user with 'upload_files' can read them.
- * Without this, wp_get_attachment_image(), wp_get_attachment_metadata(), and
- * set_post_thumbnail() all fail for non-admin users.
- *
- * @param string[] $caps    Required capabilities.
- * @param string   $cap     The capability being checked.
- * @param int      $user_id The user ID.
- * @param array    $args    Additional arguments (first element is the post ID).
- * @return string[] Modified capabilities.
- */
-function grant_private_attachment_read( array $caps, string $cap, int $user_id, array $args ) : array {
-	if ( $cap !== 'read_post' || empty( $args[0] ) ) {
-		return $caps;
-	}
-
-	$post = get_post( $args[0] );
-
-	// Only apply to private attachments — never modify caps for posts, pages, etc.
-	if ( $post && $post->post_type === 'attachment' && $post->post_status === 'private' ) {
-		// Replace 'read_private_posts' with 'upload_files' — any user who can
-		// upload media should be able to read private attachments.
-		return array_map( function ( $required_cap ) {
-			return $required_cap === 'read_private_posts' ? 'upload_files' : $required_cap;
-		}, $caps );
-	}
-
-	return $caps;
 }
 
 /**
