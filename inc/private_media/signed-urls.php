@@ -89,9 +89,10 @@ function sign_rest_content( \WP_REST_Response $response, \WP_Post $post ) : \WP_
 /**
  * Replace private media URLs in content with signed S3 URLs.
  *
- * Images are signed then passed through tachyon_url() so Tachyon receives
- * the AWS params directly. Non-image files (PDFs, videos, etc.) use the
- * signed URL directly.
+ * When Tachyon is available, images are wrapped via tachyon_url() and
+ * Tachyon handles S3 auth itself. When Tachyon is not available, the
+ * signed URL is rewritten to the canonical S3 host by
+ * rewrite_presigned_url_to_canonical_s3() so the AWS signature matches.
  *
  * @param string $content The content to process.
  * @return string Content with private URLs replaced by signed ones.
@@ -111,19 +112,15 @@ function replace_private_urls( string $content ) : string {
 			continue;
 		}
 
-		// wp_get_attachment_url() already returns a signed URL for private
-		// attachments — S3 Uploads hooks into the filter and signs via
-		// get_s3_location_for_url(). For non-images, the
-		// rewrite_presigned_url_to_canonical_s3 filter then rewrites the
-		// host to the canonical S3 endpoint, which can't be re-resolved
-		// by get_s3_location_for_url(). So we use the already-signed URL
-		// directly instead of stripping params and re-signing.
+		// wp_get_attachment_url() returns a signed URL for private attachments
+		// via S3 Uploads' filter. rewrite_presigned_url_to_canonical_s3 then
+		// rewrites the host to canonical S3 when Tachyon isn't available, so
+		// the signature matches. Use it directly rather than re-signing.
 		$signed_url = (string) wp_get_attachment_url( $attachment_id );
 
 		if ( $signed_url !== $attachment['modified_url'] ) {
-			// Route images through Tachyon so it can handle S3 auth.
-			// Pass the signed S3 URL directly to tachyon_url() so that
-			// Tachyon receives the AWS params as top-level query params.
+			// When Tachyon is available, route images through it so its
+			// image processing (resize, format conversion) still applies.
 			if ( function_exists( 'tachyon_url' ) && wp_attachment_is_image( $attachment_id ) ) {
 				$signed_url = tachyon_url( $signed_url );
 			}
@@ -215,22 +212,28 @@ function disable_srcset_in_preview( array $sources ) : array {
  * `s3_uploads_presigned_url` may use a CDN or custom hostname.
  * Replacing the host ensures the signature matches the request.
  *
+ * Skipped for images when Tachyon is enabled — Tachyon handles S3 auth
+ * itself, so the URL is left alone whether the image is a direct
+ * attachment or a sub-file of a non-image attachment (PDF preview JPEG,
+ * video poster).
+ *
  * @param string $url     The presigned URL.
  * @param int    $post_id The attachment post ID.
- * @return string URL rewritten to the canonical S3 endpoint, or unchanged for images.
+ * @return string URL rewritten to the canonical S3 endpoint, or unchanged for images when Tachyon is enabled.
  */
 function rewrite_presigned_url_to_canonical_s3( string $url, int $post_id ) : string {
-	// Images are served through Tachyon, which handles S3 auth itself.
-	if ( wp_attachment_is_image( $post_id ) ) {
-		return $url;
-	}
+	if ( function_exists( 'tachyon_url' ) ) {
+		if ( wp_attachment_is_image( $post_id ) ) {
+			return $url;
+		}
 
-	// PDF preview images are JPEG sub-sizes of the PDF attachment.
-	// wp_attachment_is_image() returns false for PDFs, but the preview
-	// image itself should go through Tachyon, not canonical S3.
-	$path = wp_parse_url( $url, PHP_URL_PATH );
-	if ( $path && preg_match( '/\.(jpe?g|png|gif|webp)$/i', strtok( $path, '?' ) ) ) {
-		return $url;
+		// Image sub-files of non-image attachments (PDF preview JPEGs,
+		// video poster images) — Tachyon serves these too even though
+		// wp_attachment_is_image() returns false for the parent.
+		$path = wp_parse_url( $url, PHP_URL_PATH );
+		if ( $path && preg_match( '/\.(jpe?g|png|gif|webp)$/i', strtok( $path, '?' ) ) ) {
+			return $url;
+		}
 	}
 
 	if ( ! class_exists( '\\S3_Uploads\\Plugin' ) ) {
