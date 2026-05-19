@@ -15,16 +15,22 @@ use Altis;
 /**
  * Check if the private media feature is active for the current site.
  *
- * Returns false for the global media library site and when the feature is
- * disabled via configuration.
+ * The feature is opt-in: returns false unless explicitly enabled via Altis
+ * configuration. Also returns false on the global media library site, even
+ * when enabled.
+ *
+ * @param array|null $module_config Optional. The `modules.media` config slice.
+ *                                  Defaults to the live config. Used for testing.
  *
  * @return bool True if private media is active.
  */
-function is_private_media_active() : bool {
-	$config = Altis\get_config()['modules']['media'] ?? [];
+function is_private_media_active( ?array $module_config = null ) : bool {
+	if ( $module_config === null ) {
+		$module_config = Altis\get_config()['modules']['media'] ?? [];
+	}
 
-	// Check if explicitly disabled.
-	if ( isset( $config['private-media'] ) && $config['private-media'] === false ) {
+	// Off unless explicitly enabled.
+	if ( empty( $module_config['private-media'] ) ) {
 		return false;
 	}
 
@@ -42,16 +48,18 @@ function is_private_media_active() : bool {
 /**
  * Bootstrap the private media feature.
  *
- * All hooks are gated behind is_private_media_active(). When disabled, the
- * feature leaves no runtime footprint — attachments stay at WP's default
- * `inherit` status and the `_altis_media_acl` post meta is simply ignored.
+ * The feature is opt-in. All hooks are gated behind is_private_media_active().
+ * When not explicitly enabled, the feature leaves no runtime footprint —
+ * attachments stay at WP's default `inherit` status and the `_altis_media_acl`
+ * post meta is simply ignored.
  *
  * @return void
  */
 function bootstrap() {
-	// Check config-level disable (safe to check early — no WP functions needed).
-	$config = Altis\get_config()['modules']['media'] ?? [];
-	if ( isset( $config['private-media'] ) && $config['private-media'] === false ) {
+	// Early config-only gate (safe to check before muplugins_loaded — no WP
+	// functions are needed for the opt-in check). The global-site portion of
+	// is_private_media_active() is skipped until muplugins_loaded has fired.
+	if ( ! is_private_media_active() ) {
 		return;
 	}
 

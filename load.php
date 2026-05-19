@@ -25,7 +25,7 @@ add_action( 'altis.modules.init', function () {
 		],
 		'global-media-library' => false,
 		'local-media-library' => true,
-		'private-media' => true,
+		'private-media' => false,
 	];
 	$options = [
 		'defaults' => $default_settings,

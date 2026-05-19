@@ -6,7 +6,7 @@ in published content, or when you choose to make it public manually.
 
 This prevents uploaded media from being discoverable or shareable before the content it belongs to has been published.
 
-Private Media is enabled by default for all sites except the Global Media Library site. It can be disabled via configuration:
+Private Media is opt-in. Enable it by adding the following to your `composer.json`:
 
 ```json
 {
@@ -14,13 +14,15 @@ Private Media is enabled by default for all sites except the Global Media Librar
         "altis": {
             "modules": {
                 "media": {
-                    "private-media": false
+                    "private-media": true
                 }
             }
         }
     }
 }
 ```
+
+The feature is always off on the Global Media Library site, even when enabled in configuration.
 
 ## How It Works
 
@@ -160,11 +162,14 @@ precedence.
 
 ## Configuration
 
-### Disabling the Feature
+### Enabling the Feature
 
-Set `private-media` to `false` in your Altis configuration to disable the feature entirely. When disabled, the feature leaves no
-runtime footprint: attachments stay at WordPress's default `inherit` status and the `_altis_media_acl` post meta that records
-each file's S3 ACL state is simply ignored. Re-enabling the feature later restores the existing values without any migration.
+Set `private-media` to `true` in your Altis configuration to turn the feature on. The feature is off by default and leaves no
+runtime footprint when not enabled: attachments stay at WordPress's default `inherit` status and the `_altis_media_acl` post meta
+that records each file's S3 ACL state is simply ignored. Toggling the feature off and back on is non-destructive — the existing
+ACL meta is read again when re-enabled, no migration is required to come back online.
+
+The `wp private-media …` commands described below are only registered while the feature is enabled.
 
 ### Adding Custom Post Types
 
