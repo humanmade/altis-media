@@ -21,6 +21,13 @@ class SignedUrlsTest extends \Codeception\TestCase\WPTestCase {
 	public function setUp() : void {
 		parent::setUp();
 		$this->setup_s3_mock();
+
+		// In the codecept integration env, plugins_loaded fires before Altis
+		// bootstraps, so Altis\Media\load_plugins() never runs and Tachyon
+		// isn't required. Force it now so tachyon_url() is available.
+		if ( ! function_exists( 'tachyon_url' ) && function_exists( 'Altis\\Media\\load_plugins' ) ) {
+			\Altis\Media\load_plugins();
+		}
 	}
 
 	public function tearDown() : void {
@@ -60,5 +67,63 @@ class SignedUrlsTest extends \Codeception\TestCase\WPTestCase {
 		// Not in preview mode.
 		$result = Signed_Urls\replace_private_urls_in_preview( $content );
 		$this->assertEquals( $content, $result );
+	}
+
+
+	public function testAttachmentLinkHrefWrappedInTachyonForPrivateImage() {
+		if ( ! function_exists( 'tachyon_url' ) ) {
+			$this->markTestSkipped( 'Tachyon plugin not loaded.' );
+		}
+
+		$attachment_id = $this->create_test_attachment(
+			[ 'post_status' => 'private' ],
+			[ 'file' => '2026/05/photo.jpg', 'width' => 800, 'height' => 600 ]
+		);
+		update_post_meta( $attachment_id, '_wp_attached_file', '2026/05/photo.jpg' );
+
+		$uploads = wp_get_upload_dir();
+		$href    = $uploads['baseurl'] . '/2026/05/photo.jpg?X-Amz-Signature=abc&X-Amz-Date=20260525T000000Z';
+
+		$result = Signed_Urls\sign_attachment_link_href( [ 'href' => $href ], $attachment_id );
+
+		$this->assertStringStartsWith( rtrim( TACHYON_URL, '/' ), $result['href'] );
+		$this->assertStringContainsString( 'presign=', $result['href'] );
+		$this->assertStringNotContainsString( 'X-Amz-Signature=', $result['href'] );
+	}
+
+	public function testAttachmentLinkHrefUnchangedForPublicImage() {
+		if ( ! function_exists( 'tachyon_url' ) ) {
+			$this->markTestSkipped( 'Tachyon plugin not loaded.' );
+		}
+
+		$attachment_id = $this->create_test_attachment(
+			[ 'post_status' => 'publish' ],
+			[ 'file' => '2026/05/photo.jpg' ]
+		);
+		update_post_meta( $attachment_id, '_wp_attached_file', '2026/05/photo.jpg' );
+
+		$href = 'https://example.com/wp-content/uploads/2026/05/photo.jpg';
+
+		$result = Signed_Urls\sign_attachment_link_href( [ 'href' => $href ], $attachment_id );
+
+		$this->assertEquals( $href, $result['href'] );
+	}
+
+	public function testAttachmentLinkHrefUnchangedForNonImage() {
+		if ( ! function_exists( 'tachyon_url' ) ) {
+			$this->markTestSkipped( 'Tachyon plugin not loaded.' );
+		}
+
+		$attachment_id = $this->create_test_attachment(
+			[ 'post_status' => 'private', 'post_mime_type' => 'application/pdf' ],
+			[ 'file' => '2026/05/doc.pdf' ]
+		);
+		update_post_meta( $attachment_id, '_wp_attached_file', '2026/05/doc.pdf' );
+
+		$href = 'https://example.com/wp-content/uploads/2026/05/doc.pdf?X-Amz-Signature=abc';
+
+		$result = Signed_Urls\sign_attachment_link_href( [ 'href' => $href ], $attachment_id );
+
+		$this->assertEquals( $href, $result['href'] );
 	}
 }

@@ -29,6 +29,10 @@ function bootstrap() {
 	// Rewrite presigned URLs to use the canonical S3 endpoint so the
 	// signature matches the host the request will be sent to.
 	add_filter( 's3_uploads_presigned_url', __NAMESPACE__ . '\\rewrite_presigned_url_to_canonical_s3', 999, 2 );
+
+	// Route attachment-link hrefs for private images through Tachyon —
+	// Tachyon's the_content filter only rewrites <img src>, not <a href>.
+	add_filter( 'wp_get_attachment_link_attributes', __NAMESPACE__ . '\\sign_attachment_link_href', 10, 2 );
 }
 
 /**
@@ -202,6 +206,35 @@ function disable_srcset_in_preview( array $sources ) : array {
 	}
 
 	return $sources;
+}
+
+/**
+ * Route the href of an attachment link for a private image through Tachyon.
+ *
+ * @param array $attributes Link attributes, including `href`.
+ * @param int   $attachment_id Attachment post ID.
+ * @return array Attributes with href rewritten when applicable.
+ */
+function sign_attachment_link_href( array $attributes, int $attachment_id ) : array {
+	if ( ! function_exists( 'tachyon_url' ) ) {
+		return $attributes;
+	}
+
+	if ( empty( $attributes['href'] ) ) {
+		return $attributes;
+	}
+
+	if ( ! wp_attachment_is_image( $attachment_id ) ) {
+		return $attributes;
+	}
+
+	if ( Visibility\check_attachment_is_public( $attachment_id ) ) {
+		return $attributes;
+	}
+
+	$attributes['href'] = tachyon_url( $attributes['href'] );
+
+	return $attributes;
 }
 
 /**

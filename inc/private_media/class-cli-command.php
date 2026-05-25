@@ -17,7 +17,6 @@ use WP_Query;
  * Manage private media visibility.
  */
 class CLI_Command extends \WP_CLI_Command {
-
 	/**
 	 * Migrate existing attachments for private media support.
 	 *
