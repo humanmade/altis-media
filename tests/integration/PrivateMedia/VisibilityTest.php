@@ -39,7 +39,7 @@ class VisibilityTest extends WPTestCase {
 	public function testPreFeatureAttachmentIsPublic() {
 		// An attachment with no _altis_media_acl meta predates the feature.
 		// Without this safety net, enabling private media on an existing site
-		// would silently break every previously-uploaded image until migrate ran.
+		// would silently break every previously-uploaded image.
 		$id = $this->create_test_attachment();
 
 		$this->assertTrue( Visibility\check_attachment_is_public( $id ) );

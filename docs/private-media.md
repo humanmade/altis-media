@@ -141,18 +141,12 @@ Posts and pages in the admin list include two additional quick actions for worki
 When you preview a draft post, private images in the content are displayed using temporary signed URLs that expire after a short
 period. This means you can see exactly how the post will look without needing to make the images public first.
 
-## Existing Uploads and Migration
+## Existing Uploads
 
-When Private Media is first enabled on a site that already has uploaded files, all existing files remain publicly accessible. They
-are marked as "legacy" uploads so they continue to work without disruption.
-
-To apply this marking, run the migration command after enabling the feature:
-
-```
-wp private-media migrate
-```
-
-Use `--dry-run` to preview what would change without making any modifications.
+When Private Media is first enabled on a site that already has uploaded files, all existing files remain publicly accessible — no
+migration step is needed. The visibility check treats any attachment that lacks the `_altis_media_acl` post meta as public, so
+files uploaded before the feature was enabled are unaffected. From the moment the feature turns on, every new upload writes the
+meta and is managed by the usual rules.
 
 ## Site Icon
 
@@ -214,42 +208,16 @@ add_filter( 'altis.media.private_media.post_attachment_ids', function ( array $i
 
 ## WP-CLI Commands
 
-Three commands are available for managing private media from the command line. All of them support `--dry-run` to preview what
+Two commands are available for managing private media from the command line. Both support `--dry-run` to preview what
 would change without applying anything.
 
 ### Which command should I use?
 
 | Situation                                                                            | Command                                       |
 |--------------------------------------------------------------------------------------|-----------------------------------------------|
-| First-time enable on a site that already has uploaded files                          | [`migrate`](#migrate-existing-uploads)        |
 | Force a single file public or private (or remove an override) from the shell         | [`set_visibility`](#set-visibility-for-a-specific-file) |
 | Repair drift after a content import, an SQL edit, or a filter change                 | [`fix_attachments`](#repair-attachment-references) |
 | Bulk-publish all media used by a single post                                         | Use the **Publish image(s)** row action in the Posts list (UI), not CLI |
-
-### Migrate Existing Uploads
-
-```
-wp private-media migrate [--dry-run]
-```
-
-A **one-time** command for sites that already had uploaded files before Private Media was enabled. It walks every existing
-attachment and:
-
-1. Marks it as legacy by setting `legacy_attachment` in its metadata. Legacy attachments stay publicly accessible regardless of
-   whether they appear in any published post — they predate the feature, so the system doesn't try to retroactively decide
-   whether they "should" be private.
-2. Records its ACL state by setting the `_altis_media_acl` post meta to `public-read`.
-3. Updates the file's S3 ACL to `public-read`.
-
-You should run this **once**, immediately after enabling Private Media on a site with existing content. Running it a second time
-is harmless but unnecessary — there will be nothing left to migrate.
-
-Use `--dry-run` first to see how many attachments would be touched.
-
-```
-wp private-media migrate --dry-run
-wp private-media migrate
-```
 
 ### Set Visibility for a Specific File
 

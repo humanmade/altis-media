@@ -12,6 +12,7 @@ namespace Altis\Media\Private_Media;
 
 use Altis;
 use Altis\Global_Content;
+use WP_CLI;
 
 /**
  * Check if the private media feature is active for the current site.
@@ -106,6 +107,6 @@ function bootstrap_feature() {
 
 	// CLI commands.
 	if ( defined( 'WP_CLI' ) && WP_CLI ) {
-		CLI\bootstrap();
+		WP_CLI::add_command( 'private-media', CLI_Command::class );
 	}
 }
