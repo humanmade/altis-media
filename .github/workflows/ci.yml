@@ -14,10 +14,7 @@ on:
 
 jobs:
   ci:
-    # TODO: re-pin to module-ci.yml@master (or the #1065 merge SHA) once
-    # humanmade/altis-dev-tools#1065 lands. The `module-config` input only
-    # exists on that branch.
-    uses: humanmade/altis-dev-tools/.github/workflows/module-ci.yml@90a5e3b648e5438ef7c8e055a81fcabb5837e74e
+    uses: humanmade/altis-dev-tools/.github/workflows/module-ci.yml@088bce7321fde60b9c22e792e764fa13ccd8f6ab
     with:
       altis-package: altis/media
       module-config: '{"media":{"private-media":true}}'
