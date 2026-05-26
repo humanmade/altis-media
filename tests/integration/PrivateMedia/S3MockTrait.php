@@ -24,29 +24,16 @@ trait S3MockTrait {
 	protected array $acl_calls = [];
 
 	/**
-	 * Recorded CDN purge calls: [ attachment_id, ... ].
-	 *
-	 * @var int[]
-	 */
-	protected array $cdn_purge_calls = [];
-
-	/**
 	 * Set up S3 mock filters.
 	 *
 	 * @return void
 	 */
 	protected function setup_s3_mock() : void {
 		$this->acl_calls = [];
-		$this->cdn_purge_calls = [];
 
 		add_filter( 'altis.media.private_media.s3_acl', function ( $acl, $attachment_id ) {
 			$this->acl_calls[ $attachment_id ] = $acl;
 			return ''; // Short-circuit real S3 call.
-		}, 10, 2 );
-
-		add_filter( 'private_media/purge_cdn_cache', function ( $result, $attachment_id ) {
-			$this->cdn_purge_calls[] = $attachment_id;
-			return true; // Short-circuit.
 		}, 10, 2 );
 	}
 
@@ -159,6 +146,5 @@ trait S3MockTrait {
 	 */
 	protected function teardown_s3_mock() : void {
 		remove_all_filters( 'altis.media.private_media.s3_acl' );
-		remove_all_filters( 'private_media/purge_cdn_cache' );
 	}
 }

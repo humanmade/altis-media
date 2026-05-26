@@ -29,6 +29,12 @@ function bootstrap() {
 	add_action( 'add_attachment', __NAMESPACE__ . '\\set_new_attachment_private', 0 );
 	add_filter( 's3_uploads_is_attachment_private', __NAMESPACE__ . '\\filter_is_attachment_private', 10, 2 );
 	add_filter( 's3_uploads_private_attachment_url_expiry', __NAMESPACE__ . '\\filter_private_url_expiry', 10, 2 );
+
+	// Default consumers of attachment_visibility_changed: write the S3 ACL,
+	// then invalidate any CDN-cached copies. Either can be removed by an
+	// integration that wants to do something different.
+	add_action( 'altis.media.private_media.attachment_visibility_changed', __NAMESPACE__ . '\\update_s3_acl', 10, 2 );
+	add_action( 'altis.media.private_media.attachment_visibility_changed', __NAMESPACE__ . '\\purge_cdn_for_attachment', 10, 1 );
 }
 
 /**
@@ -128,8 +134,16 @@ function set_attachment_visibility( int $attachment_id ) : void {
 
 	update_post_meta( $attachment_id, META_KEY, $new_acl );
 
-	update_s3_acl( $attachment_id, $new_acl );
-	purge_cdn_cache( $attachment_id );
+	/**
+	 * Fires after an attachment's visibility has been re-evaluated and the
+	 * `_altis_media_acl` meta has been written. Default consumers update
+	 * the S3 ACL and invalidate the CDN cache; either can be replaced by
+	 * unhooking and registering a different callback.
+	 *
+	 * @param int    $attachment_id The attachment ID.
+	 * @param string $new_acl       The new ACL ('public-read' or 'private').
+	 */
+	do_action( 'altis.media.private_media.attachment_visibility_changed', $attachment_id, $new_acl );
 }
 
 /**
@@ -163,33 +177,26 @@ function update_s3_acl( int $attachment_id, string $acl ) : void {
 }
 
 /**
- * Purge CDN cache for an attachment.
+ * Invalidate the CDN cache for an attachment.
  *
- * Filterable via 'private_media/purge_cdn_cache' for testing.
+ * Default consumer of `altis.media.private_media.attachment_visibility_changed`.
+ * Delegates to the Altis Cloud media-purge function when CloudFront is
+ * actually configured for this environment — local dev, CI, and non-Cloud
+ * installs have nowhere to invalidate, so this is a no-op there.
  *
  * @param int $attachment_id The attachment ID.
  * @return void
  */
-function purge_cdn_cache( int $attachment_id ) : void {
-	/**
-	 * Filter to intercept CDN cache purge (test seam).
-	 *
-	 * Return a non-null value to short-circuit.
-	 *
-	 * @param null|mixed $result        Return non-null to short-circuit.
-	 * @param int        $attachment_id The attachment ID.
-	 */
-	$result = apply_filters( 'private_media/purge_cdn_cache', null, $attachment_id );
-	if ( $result !== null ) {
+function purge_cdn_for_attachment( int $attachment_id ) : void {
+	if ( ! defined( 'CLOUDFRONT_DISTRIBUTION_ID' ) ) {
 		return;
 	}
 
-	/**
-	 * Action fired when CDN cache should be purged for an attachment.
-	 *
-	 * @param int $attachment_id The attachment ID.
-	 */
-	do_action( 'private_media/do_purge_cdn_cache', $attachment_id );
+	if ( ! function_exists( '\\Altis\\Cloud\\Cloudfront_Media_Purge\\purge_media_file_cache' ) ) {
+		return;
+	}
+
+	\Altis\Cloud\Cloudfront_Media_Purge\purge_media_file_cache( $attachment_id );
 }
 
 /**
