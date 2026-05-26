@@ -83,8 +83,8 @@ class PrivateMediaCest {
 		// Should redirect back with success notice.
 		$I->waitForText( 'Attachment visibility updated.', 10 );
 
-		// The visibility column should now show "Public (forced)".
-		$I->see( 'Public (forced)', '.private-media-status' );
+		// The visibility column should now show "Public (overridden)".
+		$I->see( 'Public (overridden)', '.private-media-status' );
 	}
 
 	/**
@@ -119,19 +119,19 @@ class PrivateMediaCest {
 		// Should redirect back with success notice.
 		$I->waitForText( 'Attachment visibility updated.', 10 );
 
-		// The visibility column should now show "Private (forced)".
-		$I->see( 'Private (forced)', '.private-media-status' );
+		// The visibility column should now show "Private (overridden)".
+		$I->see( 'Private (overridden)', '.private-media-status' );
 	}
 
 	/**
-	 * Test the Remove Override row action in the media library.
+	 * Test the Restore Default Visibility row action in the media library.
 	 *
 	 * @param AcceptanceTester $I Tester.
 	 *
 	 * @return void
 	 */
-	public function removeOverrideRowAction( AcceptanceTester $I ) {
-		$I->wantToTest( 'Remove Override row action resets to automatic visibility.' );
+	public function restoreDefaultVisibilityRowAction( AcceptanceTester $I ) {
+		$I->wantToTest( 'Restore Default Visibility row action resets to automatic visibility.' );
 
 		$I->loginAsAdmin();
 
@@ -147,10 +147,10 @@ class PrivateMediaCest {
 		$I->click( 'Make Public' );
 		$I->waitForText( 'Attachment visibility updated.', 10 );
 
-		// Now remove override.
+		// Now restore default visibility.
 		$I->moveMouseOver( '.wp-list-table tbody tr:first-child' );
-		$I->seeLink( 'Remove Override' );
-		$I->click( 'Remove Override' );
+		$I->seeLink( 'Restore Default Visibility' );
+		$I->click( 'Restore Default Visibility' );
 		$I->waitForText( 'Attachment visibility updated.', 10 );
 
 		// Should revert to automatic (Private, since no references).
