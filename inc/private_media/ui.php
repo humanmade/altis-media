@@ -223,8 +223,8 @@ function handle_row_actions() : void {
  * @return array Modified bulk actions.
  */
 function add_bulk_actions( array $actions ) : array {
-	$actions['private_media_force_public']    = __( 'Set Visibility: Force Public', 'altis' );
-	$actions['private_media_force_private']   = __( 'Set Visibility: Force Private', 'altis' );
+	$actions['private_media_force_public']    = __( 'Set Visibility: Public', 'altis' );
+	$actions['private_media_force_private']   = __( 'Set Visibility: Private', 'altis' );
 	$actions['private_media_remove_override'] = __( 'Set Visibility: Automatic', 'altis' );
 	return $actions;
 }

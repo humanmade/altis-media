@@ -92,8 +92,8 @@ Hover over any row in list view to see the available quick actions:
 
 - **Make Public** — makes the file publicly accessible, even if it is not used in any published content.
 - **Make Private** — makes the file private, even if it is currently used in published content.
-- **Remove Override** — removes your manual setting and returns the file to automatic management (appears after you have used Make
-  Public or Make Private).
+- **Restore Default Visibility** — removes your manual setting and returns the file to automatic management (appears after you have used
+  Make Public or Make Private).
 
 After changing visibility, a confirmation notice appears at the top of the screen:
 
@@ -105,11 +105,8 @@ To change the visibility of several files at once:
 
 1. Switch the media library to list view.
 2. Select the files using the checkboxes.
-3. Choose **Set Visibility** from the **Bulk actions** dropdown.
+3. From the **Bulk actions** dropdown, choose one of the **Set Visibility** options — "Public", "Private", or "Automatic".
 4. Click **Apply**.
-5. On the confirmation screen, choose the target visibility and click **Apply**.
-
-![Bulk visibility confirmation screen](./assets/private-media-bulk-confirm.png)
 
 ### Changing Visibility in the Media Browser
 
@@ -234,8 +231,8 @@ wp private-media set_visibility private my-document.pdf
 wp private-media set_visibility public 123 --dry-run
 ```
 
-To **remove** an override and return an attachment to automatic management, use the **Remove Override** row action in the media
-library — there is currently no CLI equivalent.
+To **remove** an override and return an attachment to automatic management, use the **Restore Default Visibility** row action in the
+media library — there is currently no CLI equivalent.
 
 ### Repair Attachment References
 
