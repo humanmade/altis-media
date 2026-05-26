@@ -24,7 +24,7 @@ use Altis;
  *
  * @return bool True if private media is active.
  */
-function is_private_media_active( ?array $module_config = null ) : bool {
+function is_active( ?array $module_config = null ) : bool {
 	if ( $module_config === null ) {
 		$module_config = Altis\get_config()['modules']['media'] ?? [];
 	}
@@ -48,7 +48,7 @@ function is_private_media_active( ?array $module_config = null ) : bool {
 /**
  * Bootstrap the private media feature.
  *
- * The feature is opt-in. All hooks are gated behind is_private_media_active().
+ * The feature is opt-in. All hooks are gated behind is_active().
  * When not explicitly enabled, the feature leaves no runtime footprint —
  * attachments stay at WP's default `inherit` status and the `_altis_media_acl`
  * post meta is simply ignored.
@@ -58,8 +58,8 @@ function is_private_media_active( ?array $module_config = null ) : bool {
 function bootstrap() {
 	// Early config-only gate (safe to check before muplugins_loaded — no WP
 	// functions are needed for the opt-in check). The global-site portion of
-	// is_private_media_active() is skipped until muplugins_loaded has fired.
-	if ( ! is_private_media_active() ) {
+	// is_active() is skipped until muplugins_loaded has fired.
+	if ( ! is_active() ) {
 		return;
 	}
 
@@ -81,7 +81,7 @@ function bootstrap() {
  * @return void
  */
 function bootstrap_feature() {
-	if ( ! is_private_media_active() ) {
+	if ( ! is_active() ) {
 		return;
 	}
 
@@ -91,11 +91,11 @@ function bootstrap_feature() {
 	// Post lifecycle (publish/unpublish transitions).
 	Post_Lifecycle\bootstrap();
 
-	// Content sanitisation (strip AWS params).
-	Sanitisation\bootstrap();
+	// Content sanitization (strip AWS params).
+	Sanitization\bootstrap();
 
 	// Signed URL previews.
-	Signed_Urls\bootstrap();
+	Signed_URLs\bootstrap();
 
 	// Site icon handling.
 	Site_Icon\bootstrap();

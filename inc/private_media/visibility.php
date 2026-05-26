@@ -10,6 +10,8 @@
 
 namespace Altis\Media\Private_Media\Visibility;
 
+use S3_Uploads\Plugin;
+
 /**
  * Post meta key storing the S3 ACL state for an attachment.
  *
@@ -119,7 +121,7 @@ function set_attachment_visibility( int $attachment_id ) : void {
 /**
  * Update the S3 ACL for an attachment.
  *
- * Filterable via 'private_media/update_s3_acl' for testing — if the filter
+ * Filterable via 'altis.media.private_media.update_s3_acl' for testing — if the filter
  * returns non-null, the real S3 call is skipped.
  *
  * @param int    $attachment_id The attachment ID.
@@ -136,16 +138,16 @@ function update_s3_acl( int $attachment_id, string $acl ) : void {
 	 * @param int        $attachment_id The attachment ID.
 	 * @param string     $acl           The ACL being set.
 	 */
-	$result = apply_filters( 'private_media/update_s3_acl', null, $attachment_id, $acl );
+	$result = apply_filters( 'altis.media.private_media.update_s3_acl', null, $attachment_id, $acl );
 	if ( $result !== null ) {
 		return;
 	}
 
-	if ( ! class_exists( '\\S3_Uploads\\Plugin' ) ) {
+	if ( ! class_exists( Plugin::class ) ) {
 		return;
 	}
 
-	\S3_Uploads\Plugin::get_instance()->set_attachment_files_acl( $attachment_id, $acl );
+	Plugin::get_instance()->set_attachment_files_acl( $attachment_id, $acl );
 }
 
 /**

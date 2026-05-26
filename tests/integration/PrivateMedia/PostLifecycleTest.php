@@ -13,8 +13,9 @@ require_once __DIR__ . '/S3MockTrait.php';
 
 use Altis\Media\Private_Media\Post_Lifecycle;
 use Altis\Media\Private_Media\Visibility;
+use Codeception\TestCase\WPTestCase;
 
-class PostLifecycleTest extends \Codeception\TestCase\WPTestCase {
+class PostLifecycleTest extends WPTestCase {
 	use S3MockTrait;
 
 	protected $tester;
@@ -144,7 +145,7 @@ class PostLifecycleTest extends \Codeception\TestCase\WPTestCase {
 		$attachment_id = $this->create_test_attachment( [ 'post_status' => 'private' ] );
 
 		// Register a custom meta key.
-		add_filter( 'private_media/post_meta_attachment_keys', function ( $keys ) {
+		add_filter( 'altis.media.private_media.post_meta_attachment_keys', function ( $keys ) {
 			$keys[] = '_custom_image_id';
 			return $keys;
 		} );
@@ -161,7 +162,7 @@ class PostLifecycleTest extends \Codeception\TestCase\WPTestCase {
 		$this->assertAclMeta( $attachment_id, 'public-read' );
 
 		// Clean up.
-		remove_all_filters( 'private_media/post_meta_attachment_keys' );
+		remove_all_filters( 'altis.media.private_media.post_meta_attachment_keys' );
 	}
 
 	public function testPublishMakesFileAttachmentPublic() {
@@ -297,13 +298,13 @@ class PostLifecycleTest extends \Codeception\TestCase\WPTestCase {
 	}
 
 	public function testAllowedPostTypesFilter() {
-		add_filter( 'private_media/allowed_post_types', function ( $types ) {
+		add_filter( 'altis.media.private_media.allowed_post_types', function ( $types ) {
 			$types[] = 'custom_type';
 			return $types;
 		} );
 
 		$this->assertTrue( Post_Lifecycle\is_allowed_post_type( 'custom_type' ) );
 
-		remove_all_filters( 'private_media/allowed_post_types' );
+		remove_all_filters( 'altis.media.private_media.allowed_post_types' );
 	}
 }

@@ -8,10 +8,13 @@
  * @package altis/media
  */
 
-namespace Altis\Media\Private_Media\Signed_Urls;
+namespace Altis\Media\Private_Media\Signed_URLs;
 
 use Altis\Media\Private_Media\Content_Parser;
 use Altis\Media\Private_Media\Visibility;
+use S3_Uploads\Plugin;
+use WP_Post;
+use WP_REST_Response;
 
 /**
  * Bootstrap signed URL hooks.
@@ -67,11 +70,11 @@ function register_rest_filters() {
 /**
  * Add signed URLs to REST API response content for drafts/future posts.
  *
- * @param \WP_REST_Response $response The REST response.
- * @param \WP_Post          $post     The post object.
- * @return \WP_REST_Response
+ * @param WP_REST_Response $response The REST response.
+ * @param WP_Post          $post     The post object.
+ * @return WP_REST_Response
  */
-function sign_rest_content( \WP_REST_Response $response, \WP_Post $post ) : \WP_REST_Response {
+function sign_rest_content( WP_REST_Response $response, WP_Post $post ) : WP_REST_Response {
 	// Only sign URLs for non-published posts.
 	if ( $post->post_status === 'publish' ) {
 		return $response;
@@ -80,7 +83,7 @@ function sign_rest_content( \WP_REST_Response $response, \WP_Post $post ) : \WP_
 	$data = $response->get_data();
 
 	// Sign URLs in raw content so the block editor can display private
-	// images. The sanitisation module strips AWS params on save, so
+	// images. The sanitization module strips AWS params on save, so
 	// signed URLs are never persisted to the database.
 	if ( ! empty( $data['content']['raw'] ) ) {
 		$data['content']['raw'] = replace_private_urls( $data['content']['raw'] );
@@ -273,7 +276,7 @@ function rewrite_presigned_url_to_canonical_s3( string $url, int $post_id ) : st
 		return $url;
 	}
 
-	$instance = \S3_Uploads\Plugin::get_instance();
+	$instance = Plugin::get_instance();
 	$bucket   = $instance->get_s3_bucket();
 	$region   = $instance->get_s3_bucket_region();
 	$s3_host  = sprintf( '%s.s3.%s.amazonaws.com', $bucket, $region ?: 'us-east-1' );

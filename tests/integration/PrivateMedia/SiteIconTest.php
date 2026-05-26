@@ -13,8 +13,9 @@ require_once __DIR__ . '/S3MockTrait.php';
 
 use Altis\Media\Private_Media\Site_Icon;
 use Altis\Media\Private_Media\Visibility;
+use Codeception\TestCase\WPTestCase;
 
-class SiteIconTest extends \Codeception\TestCase\WPTestCase {
+class SiteIconTest extends WPTestCase {
 	use S3MockTrait;
 
 	protected $tester;

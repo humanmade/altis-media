@@ -177,7 +177,7 @@ By default, all post types that support the content editor are tracked for media
 uses media but does not register editor support, you can include it:
 
 ```php
-add_filter( 'private_media/allowed_post_types', function ( array $types ) : array {
+add_filter( 'altis.media.private_media.allowed_post_types', function ( array $types ) : array {
     $types[] = 'my_custom_type';
     return $types;
 } );
@@ -189,7 +189,7 @@ If your theme or plugin stores file IDs in custom fields (similar to how WordPre
 those field names so they are included when scanning a post for media references:
 
 ```php
-add_filter( 'private_media/post_meta_attachment_keys', function ( array $keys ) : array {
+add_filter( 'altis.media.private_media.post_meta_attachment_keys', function ( array $keys ) : array {
     $keys[] = '_custom_header_image_id';
     $keys[] = '_secondary_image_id';
     return $keys;
@@ -202,7 +202,7 @@ For more advanced cases where files are associated with posts through non-standa
 scan results:
 
 ```php
-add_filter( 'private_media/post_attachment_ids', function ( array $ids, int $post_id, WP_Post $post ) : array {
+add_filter( 'altis.media.private_media.post_attachment_ids', function ( array $ids, int $post_id, WP_Post $post ) : array {
     // Include files from a custom gallery field.
     $gallery_ids = get_post_meta( $post->ID, '_gallery_images', true );
     if ( is_array( $gallery_ids ) ) {
@@ -283,7 +283,7 @@ Walks every published post in the given date range, re-scans its content for att
 state of each referenced attachment. For each post it:
 
 1. Calls `get_post_attachment_ids()` to find every attachment used in the post — image blocks, the featured image, video posters,
-   custom fields registered via the `private_media/post_attachment_ids` filter, etc.
+   custom fields registered via the `altis.media.private_media.post_attachment_ids` filter, etc.
 2. Re-records each post → attachment reference (`add_post_reference`).
 3. Recomputes the correct visibility for each attachment based on its current overrides plus its full reference list, and applies
    the result (ACL meta update + S3 ACL).
@@ -293,7 +293,7 @@ This is a **repair tool**, not part of the normal lifecycle. Reach for it when:
 
 - A bulk content import didn't fire `transition_post_status` and attachments are stuck private.
 - Someone edited posts via SQL or a script that bypassed WordPress hooks.
-- You changed `private_media/allowed_post_types`, `private_media/post_meta_attachment_keys`, or `private_media/post_attachment_ids`
+- You changed `altis.media.private_media.allowed_post_types`, `altis.media.private_media.post_meta_attachment_keys`, or `altis.media.private_media.post_attachment_ids`
   and want existing posts to be re-scanned with the new configuration.
 - The "used in" reference list on attachments has drifted out of sync with reality.
 
@@ -317,9 +317,9 @@ wp private-media fix_attachments --start-date=2000-01-01 --end-date=2099-12-31
 
 | Filter                                    | Description                                                               |
 |-------------------------------------------|---------------------------------------------------------------------------|
-| `private_media/allowed_post_types`        | Array of post types to track for media references.                        |
-| `private_media/post_meta_attachment_keys` | Array of field names that store file IDs (like the featured image field). |
-| `private_media/post_attachment_ids`       | Array of file IDs found in a post. Receives `$ids`, `$post_id`, and `$post`. |
-| `private_media/update_s3_acl`             | Intercept storage permission updates. Return non-null to short-circuit.   |
-| `private_media/purge_cdn_cache`           | Intercept CDN cache clearing. Return non-null to short-circuit.           |
-| `private_media/do_purge_cdn_cache`        | Action fired when CDN cache should be purged for an attachment.           |
+| `altis.media.private_media.allowed_post_types`        | Array of post types to track for media references.                        |
+| `altis.media.private_media.post_meta_attachment_keys` | Array of field names that store file IDs (like the featured image field). |
+| `altis.media.private_media.post_attachment_ids`       | Array of file IDs found in a post. Receives `$ids`, `$post_id`, and `$post`. |
+| `altis.media.private_media.update_s3_acl`             | Intercept storage permission updates. Return non-null to short-circuit.   |
+| `private_media/purge_cdn_cache`                       | Intercept CDN cache clearing. Return non-null to short-circuit.           |
+| `private_media/do_purge_cdn_cache`                    | Action fired when CDN cache should be purged for an attachment.           |

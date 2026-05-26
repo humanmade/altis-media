@@ -13,7 +13,7 @@
  * Test Private Media UI features.
  *
  * These tests require `modules.media.private-media` to be enabled in the
- * project's altis config — the feature is opt-in. The product-dev test
+ * project's Altis config — the feature is opt-in. The product-dev test
  * environment sets this in its `composer.json`; downstream projects running
  * this suite must do the same. If the feature is off, this suite will fail
  * loudly — that's intentional, since silently pinning it on per-test requires

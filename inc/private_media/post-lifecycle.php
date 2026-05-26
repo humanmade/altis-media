@@ -29,7 +29,7 @@ function bootstrap() {
 	add_filter( 'render_block_core/audio', __NAMESPACE__ . '\\add_audio_block_class', 10, 2 );
 
 	// Track video poster images alongside the video attachment.
-	add_filter( 'private_media/post_attachment_ids', __NAMESPACE__ . '\\add_video_poster_ids', 10, 3 );
+	add_filter( 'altis.media.private_media.post_attachment_ids', __NAMESPACE__ . '\\add_video_poster_ids', 10, 3 );
 }
 
 /**
@@ -182,7 +182,7 @@ function get_post_attachment_ids( WP_Post $post ) : array {
 	}
 
 	// Check registered meta keys that store attachment IDs.
-	$meta_keys = apply_filters( 'private_media/post_meta_attachment_keys', [], $post->ID );
+	$meta_keys = apply_filters( 'altis.media.private_media.post_meta_attachment_keys', [], $post->ID );
 	foreach ( $meta_keys as $meta_key ) {
 		$meta_value = get_post_meta( $post->ID, $meta_key, true );
 		if ( is_numeric( $meta_value ) && (int) $meta_value > 0 ) {
@@ -197,7 +197,7 @@ function get_post_attachment_ids( WP_Post $post ) : array {
 	 * @param int     $post_id The post ID.
 	 * @param WP_Post $post    The post object.
 	 */
-	$ids = apply_filters( 'private_media/post_attachment_ids', $ids, $post->ID, $post );
+	$ids = apply_filters( 'altis.media.private_media.post_attachment_ids', $ids, $post->ID, $post );
 
 	// Ensure all IDs are valid attachment IDs.
 	$ids = array_filter( array_unique( array_map( 'intval', $ids ) ), function ( int $id ) : bool {
@@ -223,7 +223,7 @@ function is_allowed_post_type( string $post_type ) : bool {
 	 *
 	 * @param string[] $allowed Array of allowed post type names.
 	 */
-	$allowed = apply_filters( 'private_media/allowed_post_types', $allowed );
+	$allowed = apply_filters( 'altis.media.private_media.allowed_post_types', $allowed );
 
 	return in_array( $post_type, $allowed, true );
 }

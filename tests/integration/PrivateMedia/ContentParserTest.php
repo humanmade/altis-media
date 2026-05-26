@@ -10,8 +10,9 @@
 namespace PrivateMedia;
 
 use Altis\Media\Private_Media\Content_Parser;
+use Codeception\TestCase\WPTestCase;
 
-class ContentParserTest extends \Codeception\TestCase\WPTestCase {
+class ContentParserTest extends WPTestCase {
 
 	protected $tester;
 

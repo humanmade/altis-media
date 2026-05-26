@@ -1,6 +1,6 @@
 <?php
 /**
- * Private Media — Content Sanitisation.
+ * Private Media — Content Sanitization.
  *
  * Strips AWS signing parameters from URLs in post content and widgets on save
  * to prevent credentials from being persisted in the database.
@@ -8,7 +8,7 @@
  * @package altis/media
  */
 
-namespace Altis\Media\Private_Media\Sanitisation;
+namespace Altis\Media\Private_Media\Sanitization;
 
 use Altis\Media\Private_Media\Content_Parser;
 use Altis\Media\Private_Media\Visibility;
@@ -30,13 +30,13 @@ const AWS_PARAMS = [
 ];
 
 /**
- * Bootstrap sanitisation hooks.
+ * Bootstrap sanitization hooks.
  *
  * @return void
  */
 function bootstrap() {
-	add_filter( 'wp_insert_post_data', __NAMESPACE__ . '\\sanitise_post_content', 10, 1 );
-	add_filter( 'pre_update_option_widget_block', __NAMESPACE__ . '\\sanitise_widget_content', 10, 1 );
+	add_filter( 'wp_insert_post_data', __NAMESPACE__ . '\\sanitize_post_content', 10, 1 );
+	add_filter( 'pre_update_option_widget_block', __NAMESPACE__ . '\\sanitize_widget_content', 10, 1 );
 }
 
 /**
@@ -45,7 +45,7 @@ function bootstrap() {
  * @param array $data The post data array.
  * @return array Modified post data.
  */
-function sanitise_post_content( array $data ) : array {
+function sanitize_post_content( array $data ) : array {
 	if ( empty( $data['post_content'] ) ) {
 		return $data;
 	}
@@ -68,7 +68,7 @@ function sanitise_post_content( array $data ) : array {
  * @param mixed $value The widget option value.
  * @return mixed Modified widget value.
  */
-function sanitise_widget_content( $value ) {
+function sanitize_widget_content( $value ) {
 	if ( ! is_string( $value ) ) {
 		return $value;
 	}
@@ -87,8 +87,8 @@ function sanitise_widget_content( $value ) {
 /**
  * Strip AWS signing parameters from all URLs in a content string.
  *
- * @param string $content The content to sanitise.
- * @return string Sanitised content.
+ * @param string $content The content to sanitize.
+ * @return string Sanitized content.
  */
 function strip_aws_params_from_content( string $content ) : string {
 	if ( empty( $content ) ) {

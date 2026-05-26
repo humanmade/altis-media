@@ -12,6 +12,7 @@ namespace Altis\Media\Private_Media\UI;
 
 use Altis\Media\Private_Media\Visibility;
 use Altis\Media\Private_Media\Post_Lifecycle;
+use S3_Uploads\Plugin;
 use WP_Post;
 
 /**
@@ -111,7 +112,7 @@ function add_media_row_actions( array $actions, WP_Post $post ) : array {
 				$post->ID,
 				$nonce
 			) ) ),
-			esc_html__( 'Remove Override', 'altis' )
+			esc_html__( 'Restore Default Visibility', 'altis' )
 		);
 	}
 
@@ -310,9 +311,9 @@ function render_visibility_column( string $column_name, int $post_id ) : void {
 	$override = Visibility\get_override( $post_id );
 
 	if ( $override === 'public' ) {
-		echo '<span class="private-media-status private-media-status--public">' . esc_html__( 'Public (forced)', 'altis' ) . '</span>';
+		echo '<span class="private-media-status private-media-status--public">' . wp_kses( __( 'Public <em>(overridden)</em>', 'altis' ), [ 'em' => [] ] ) . '</span>';
 	} elseif ( $override === 'private' ) {
-		echo '<span class="private-media-status private-media-status--private">' . esc_html__( 'Private (forced)', 'altis' ) . '</span>';
+		echo '<span class="private-media-status private-media-status--private">' . wp_kses( __( 'Private <em>(overridden)</em>', 'altis' ), [ 'em' => [] ] ) . '</span>';
 	} elseif ( $is_public ) {
 		echo '<span class="private-media-status private-media-status--public">' . esc_html__( 'Public', 'altis' ) . '</span>';
 	} else {
@@ -410,7 +411,7 @@ function sign_cover_url_for_attachment( string $url, int $attachment_id ) : stri
 		return $url;
 	}
 
-	if ( ! class_exists( '\\S3_Uploads\\Plugin' ) ) {
+	if ( ! class_exists( Plugin::class ) ) {
 		return $url;
 	}
 
@@ -435,7 +436,7 @@ function sign_cover_url_for_attachment( string $url, int $attachment_id ) : stri
 	$relative = substr( $path, $pos + strlen( $marker ) );
 	$normalised = trailingslashit( $upload_dir['baseurl'] ) . $relative;
 
-	$plugin = \S3_Uploads\Plugin::get_instance();
+	$plugin = Plugin::get_instance();
 	$signed = $plugin->add_s3_signed_params_to_attachment_url( $normalised, $attachment_id );
 
 	// If signing failed (URL unchanged), fall back to the original URL.
@@ -461,9 +462,9 @@ function add_visibility_field( array $form_fields, WP_Post $post ) : array {
 	// Status display.
 	$status_label = $is_public ? __( 'Public', 'altis' ) : __( 'Private', 'altis' );
 	if ( $override === 'public' ) {
-		$status_label = __( 'Forced Public', 'altis' );
+		$status_label = __( 'Public (overridden)', 'altis' );
 	} elseif ( $override === 'private' ) {
-		$status_label = __( 'Forced Private', 'altis' );
+		$status_label = __( 'Private (overridden)', 'altis' );
 	}
 
 	$form_fields['private_media_status'] = [

@@ -11,9 +11,10 @@ namespace PrivateMedia;
 
 require_once __DIR__ . '/S3MockTrait.php';
 
-use Altis\Media\Private_Media\Signed_Urls;
+use Altis\Media\Private_Media\Signed_URLs;
+use Codeception\TestCase\WPTestCase;
 
-class SignedUrlsTest extends \Codeception\TestCase\WPTestCase {
+class SignedUrlsTest extends WPTestCase {
 	use S3MockTrait;
 
 	protected $tester;
@@ -45,7 +46,7 @@ class SignedUrlsTest extends \Codeception\TestCase\WPTestCase {
 			600 => [ 'url' => 'https://example.com/photo-600.jpg', 'descriptor' => 'w', 'value' => 600 ],
 		];
 
-		$result = Signed_Urls\disable_srcset_in_preview( $sources );
+		$result = Signed_URLs\disable_srcset_in_preview( $sources );
 		$this->assertEmpty( $result );
 
 		// Reset.
@@ -57,7 +58,7 @@ class SignedUrlsTest extends \Codeception\TestCase\WPTestCase {
 			300 => [ 'url' => 'https://example.com/photo-300.jpg', 'descriptor' => 'w', 'value' => 300 ],
 		];
 
-		$result = Signed_Urls\disable_srcset_in_preview( $sources );
+		$result = Signed_URLs\disable_srcset_in_preview( $sources );
 		$this->assertEquals( $sources, $result );
 	}
 
@@ -65,7 +66,7 @@ class SignedUrlsTest extends \Codeception\TestCase\WPTestCase {
 		$content = '<img class="wp-image-1" src="https://example.com/photo.jpg" />';
 
 		// Not in preview mode.
-		$result = Signed_Urls\replace_private_urls_in_preview( $content );
+		$result = Signed_URLs\replace_private_urls_in_preview( $content );
 		$this->assertEquals( $content, $result );
 	}
 
@@ -84,7 +85,7 @@ class SignedUrlsTest extends \Codeception\TestCase\WPTestCase {
 		$uploads = wp_get_upload_dir();
 		$href    = $uploads['baseurl'] . '/2026/05/photo.jpg?X-Amz-Signature=abc&X-Amz-Date=20260525T000000Z';
 
-		$result = Signed_Urls\sign_attachment_link_href( [ 'href' => $href ], $attachment_id );
+		$result = Signed_URLs\sign_attachment_link_href( [ 'href' => $href ], $attachment_id );
 
 		$this->assertStringStartsWith( rtrim( TACHYON_URL, '/' ), $result['href'] );
 		$this->assertStringContainsString( 'presign=', $result['href'] );
@@ -104,7 +105,7 @@ class SignedUrlsTest extends \Codeception\TestCase\WPTestCase {
 
 		$href = 'https://example.com/wp-content/uploads/2026/05/photo.jpg';
 
-		$result = Signed_Urls\sign_attachment_link_href( [ 'href' => $href ], $attachment_id );
+		$result = Signed_URLs\sign_attachment_link_href( [ 'href' => $href ], $attachment_id );
 
 		$this->assertEquals( $href, $result['href'] );
 	}
@@ -122,7 +123,7 @@ class SignedUrlsTest extends \Codeception\TestCase\WPTestCase {
 
 		$href = 'https://example.com/wp-content/uploads/2026/05/doc.pdf?X-Amz-Signature=abc';
 
-		$result = Signed_Urls\sign_attachment_link_href( [ 'href' => $href ], $attachment_id );
+		$result = Signed_URLs\sign_attachment_link_href( [ 'href' => $href ], $attachment_id );
 
 		$this->assertEquals( $href, $result['href'] );
 	}

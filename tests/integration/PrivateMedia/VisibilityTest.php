@@ -12,8 +12,9 @@ namespace PrivateMedia;
 require_once __DIR__ . '/S3MockTrait.php';
 
 use Altis\Media\Private_Media\Visibility;
+use Codeception\TestCase\WPTestCase;
 
-class VisibilityTest extends \Codeception\TestCase\WPTestCase {
+class VisibilityTest extends WPTestCase {
 	use S3MockTrait;
 
 	protected $tester;

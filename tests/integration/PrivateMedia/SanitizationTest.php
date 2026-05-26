@@ -1,6 +1,6 @@
 <?php
 /**
- * Test content sanitisation (spec Section 6).
+ * Test content sanitization (spec Section 6).
  *
  * phpcs:disable WordPress.Files, HM.Files, HM.Functions.NamespacedFunctions, WordPress.NamingConventions
  *
@@ -9,9 +9,10 @@
 
 namespace PrivateMedia;
 
-use Altis\Media\Private_Media\Sanitisation;
+use Altis\Media\Private_Media\Sanitization;
+use Codeception\TestCase\WPTestCase;
 
-class SanitisationTest extends \Codeception\TestCase\WPTestCase {
+class SanitizationTest extends WPTestCase {
 
 	protected $tester;
 
@@ -31,9 +32,9 @@ class SanitisationTest extends \Codeception\TestCase\WPTestCase {
 		$url = 'https://example.com/uploads/photo.jpg?' . implode( '&', $params );
 		$content = sprintf( '<img src="%s" class="wp-image-1" />', $url );
 
-		$result = Sanitisation\strip_aws_params_from_content( $content );
+		$result = Sanitization\strip_aws_params_from_content( $content );
 
-		foreach ( Sanitisation\AWS_PARAMS as $param ) {
+		foreach ( Sanitization\AWS_PARAMS as $param ) {
 			$this->assertStringNotContainsString( $param, $result, "Parameter {$param} should be stripped." );
 		}
 
@@ -44,7 +45,7 @@ class SanitisationTest extends \Codeception\TestCase\WPTestCase {
 		$url = 'https://example.com/uploads/photo.jpg?w=800&h=600&X-Amz-Algorithm=test&quality=80';
 		$content = sprintf( '<img src="%s" />', $url );
 
-		$result = Sanitisation\strip_aws_params_from_content( $content );
+		$result = Sanitization\strip_aws_params_from_content( $content );
 
 		$this->assertStringContainsString( 'w=800', $result );
 		$this->assertStringContainsString( 'h=600', $result );
@@ -56,7 +57,7 @@ class SanitisationTest extends \Codeception\TestCase\WPTestCase {
 		$url = 'https://example.com/uploads/doc.pdf?X-Amz-Signature=abc&presign=true';
 		$content = sprintf( '<a href="%s">Download</a>', $url );
 
-		$result = Sanitisation\strip_aws_params_from_content( $content );
+		$result = Sanitization\strip_aws_params_from_content( $content );
 
 		$this->assertStringNotContainsString( 'X-Amz-Signature', $result );
 		$this->assertStringNotContainsString( 'presign', $result );
@@ -67,7 +68,7 @@ class SanitisationTest extends \Codeception\TestCase\WPTestCase {
 		$url = 'https://example.com/uploads/video.mp4?X-Amz-Algorithm=test';
 		$content = sprintf( '<video data-src="%s"></video>', $url );
 
-		$result = Sanitisation\strip_aws_params_from_content( $content );
+		$result = Sanitization\strip_aws_params_from_content( $content );
 
 		$this->assertStringNotContainsString( 'X-Amz-Algorithm', $result );
 	}
@@ -77,7 +78,7 @@ class SanitisationTest extends \Codeception\TestCase\WPTestCase {
 			. '<img src="https://example.com/b.jpg" class="wp-image-2" />'
 			. '<a href="https://example.com/c.pdf?presign=true&X-Amz-Date=20240101">PDF</a>';
 
-		$result = Sanitisation\strip_aws_params_from_content( $content );
+		$result = Sanitization\strip_aws_params_from_content( $content );
 
 		$this->assertStringNotContainsString( 'X-Amz-Signature', $result );
 		$this->assertStringNotContainsString( 'presign', $result );
@@ -87,19 +88,19 @@ class SanitisationTest extends \Codeception\TestCase\WPTestCase {
 		$this->assertStringContainsString( 'c.pdf', $result );
 	}
 
-	public function testSanitisePostContentFilter() {
+	public function testSanitizePostContentFilter() {
 		$data = [
 			'post_content' => '<img src="https://example.com/a.jpg?X-Amz-Algorithm=test" />',
 		];
 
-		$result = Sanitisation\sanitise_post_content( $data );
+		$result = Sanitization\sanitize_post_content( $data );
 
 		$this->assertStringNotContainsString( 'X-Amz-Algorithm', $result['post_content'] );
 	}
 
 	public function testEmptyContentPassesThrough() {
 		$data = [ 'post_content' => '' ];
-		$result = Sanitisation\sanitise_post_content( $data );
+		$result = Sanitization\sanitize_post_content( $data );
 		$this->assertEquals( '', $result['post_content'] );
 	}
 
@@ -107,7 +108,7 @@ class SanitisationTest extends \Codeception\TestCase\WPTestCase {
 		$url = 'https://example.com/tachyon/2026/03/photo.jpg?presign=X-Amz-Content-Sha256%3DUNSIGNED-PAYLOAD%26X-Amz-Algorithm%3DAWS4-HMAC-SHA256&amp;fit=1024%2C683';
 		$content = sprintf( '<img src="%s" class="wp-image-1" />', $url );
 
-		$result = Sanitisation\strip_aws_params_from_content( $content );
+		$result = Sanitization\strip_aws_params_from_content( $content );
 
 		$this->assertStringNotContainsString( 'presign', $result );
 		$this->assertStringContainsString( 'fit=1024%2C683', $result );
@@ -120,7 +121,7 @@ class SanitisationTest extends \Codeception\TestCase\WPTestCase {
 		$url = 'https://example.com/tachyon/photo.jpg?presign=abc&amp;fit=1024%2C683&amp;quality=80';
 		$content = sprintf( '<img src="%s" />', $url );
 
-		$result = Sanitisation\strip_aws_params_from_content( $content );
+		$result = Sanitization\strip_aws_params_from_content( $content );
 
 		$this->assertStringNotContainsString( 'presign', $result );
 		$this->assertStringContainsString( 'fit=1024%2C683', $result );
@@ -132,7 +133,7 @@ class SanitisationTest extends \Codeception\TestCase\WPTestCase {
 		$url = 'https://example.com/uploads/photo.jpg?X-Amz-S3-Host=s3.amazonaws.com&w=800';
 		$content = sprintf( '<img src="%s" />', $url );
 
-		$result = Sanitisation\strip_aws_params_from_content( $content );
+		$result = Sanitization\strip_aws_params_from_content( $content );
 
 		$this->assertStringNotContainsString( 'X-Amz-S3-Host', $result );
 		$this->assertStringContainsString( 'w=800', $result );

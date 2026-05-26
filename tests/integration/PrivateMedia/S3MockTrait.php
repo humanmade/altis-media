@@ -39,7 +39,7 @@ trait S3MockTrait {
 		$this->acl_calls = [];
 		$this->cdn_purge_calls = [];
 
-		add_filter( 'private_media/update_s3_acl', function ( $result, $attachment_id, $acl ) {
+		add_filter( 'altis.media.private_media.update_s3_acl', function ( $result, $attachment_id, $acl ) {
 			$this->acl_calls[ $attachment_id ] = $acl;
 			return true; // Short-circuit real S3 call.
 		}, 10, 3 );
@@ -157,7 +157,7 @@ trait S3MockTrait {
 	 * @return void
 	 */
 	protected function teardown_s3_mock() : void {
-		remove_all_filters( 'private_media/update_s3_acl' );
+		remove_all_filters( 'altis.media.private_media.update_s3_acl' );
 		remove_all_filters( 'private_media/purge_cdn_cache' );
 	}
 }
