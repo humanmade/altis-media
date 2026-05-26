@@ -129,6 +129,8 @@ which attachments it references, and re-evaluates each one — published posts m
 private unless another published post still uses them. Useful if images appear broken after a migration, an import, or a configuration
 change that bypassed the normal publish/unpublish lifecycle.
 
+![Post list row showing the Rescan attachment visibility action](./assets/private-media-post-actions.png)
+
 ## Previewing Draft Content
 
 When you preview a draft post, private images in the content are displayed using temporary signed URLs that expire after a short
