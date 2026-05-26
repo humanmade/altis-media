@@ -127,14 +127,10 @@ The sidebar also shows:
 
 ## Managing Post Attachments
 
-Posts and pages in the admin list include two additional quick actions for working with their media:
-
-![Post list row actions showing Publish image(s) and Unpublish image(s) links](./assets/private-media-post-actions.png)
-
-- **Publish image(s)** — scans the post content and ensures all files used in it are publicly accessible. Useful if images appear
-  broken after a migration or configuration change.
-- **Unpublish image(s)** — removes the post's association with its files, which may cause them to become private if no other
-  published posts use them.
+Posts and pages in the admin list include an extra **Rescan attachment visibility** row action. It walks the post's content, re-records
+which attachments it references, and re-evaluates each one — published posts make their attachments public, anything else makes them
+private unless another published post still uses them. Useful if images appear broken after a migration, an import, or a configuration
+change that bypassed the normal publish/unpublish lifecycle.
 
 ## Previewing Draft Content
 
@@ -217,7 +213,7 @@ would change without applying anything.
 |--------------------------------------------------------------------------------------|-----------------------------------------------|
 | Force a single file public or private (or remove an override) from the shell         | [`set_visibility`](#set-visibility-for-a-specific-file) |
 | Repair drift after a content import, an SQL edit, or a filter change                 | [`fix_attachments`](#repair-attachment-references) |
-| Bulk-publish all media used by a single post                                         | Use the **Publish image(s)** row action in the Posts list (UI), not CLI |
+| Bulk-rescan all media used by a single post                                          | Use the **Rescan attachment visibility** row action in the Posts list (UI), not CLI |
 
 ### Set Visibility for a Specific File
 

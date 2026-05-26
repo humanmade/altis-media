@@ -137,26 +137,14 @@ function add_post_row_actions( array $actions, WP_Post $post ) : array {
 
 	$nonce = wp_create_nonce( 'private_media_rescan_' . $post->ID );
 
-	if ( $post->post_status === 'publish' ) {
-		$actions['private_media_publish_images'] = sprintf(
-			'<a href="%s">%s</a>',
-			esc_url( admin_url( sprintf(
-				'admin.php?action=private_media_rescan&post_id=%d&visibility=publish&_wpnonce=%s',
-				$post->ID,
-				$nonce
-			) ) ),
-			esc_html__( 'Publish image(s)', 'altis' )
-		);
-	}
-
-	$actions['private_media_unpublish_images'] = sprintf(
+	$actions['private_media_rescan'] = sprintf(
 		'<a href="%s">%s</a>',
 		esc_url( admin_url( sprintf(
-			'admin.php?action=private_media_rescan&post_id=%d&visibility=unpublish&_wpnonce=%s',
+			'admin.php?action=private_media_rescan&post_id=%d&_wpnonce=%s',
 			$post->ID,
 			$nonce
 		) ) ),
-		esc_html__( 'Unpublish image(s)', 'altis' )
+		esc_html__( 'Rescan attachment visibility', 'altis' )
 	);
 
 	return $actions;
@@ -206,8 +194,10 @@ function handle_row_actions() : void {
 			wp_die( esc_html__( 'Post not found.', 'altis' ) );
 		}
 
-		$visibility = sanitize_text_field( $_GET['visibility'] ?? 'publish' );
-		if ( $visibility === 'publish' ) {
+		// Derive the right rescan path from the post's current status — a
+		// published post wants its attachments to reflect the published state,
+		// anything else wants the inverse.
+		if ( $post->post_status === 'publish' ) {
 			Post_Lifecycle\handle_publish( $post );
 		} else {
 			Post_Lifecycle\handle_unpublish( $post );
