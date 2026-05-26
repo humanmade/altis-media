@@ -27,7 +27,7 @@ function bootstrap() {
 	// Register REST filters for all post types with editor support.
 	add_action( 'rest_api_init', __NAMESPACE__ . '\\register_rest_filters' );
 
-	add_filter( 'wp_calculate_image_srcset', __NAMESPACE__ . '\\disable_srcset_in_preview', 10, 1 );
+	add_filter( 'wp_calculate_image_srcset', __NAMESPACE__ . '\\disable_srcset_for_private_attachments', 10, 5 );
 
 	// Rewrite presigned URLs to use the canonical S3 endpoint so the
 	// signature matches the host the request will be sent to.
@@ -187,20 +187,26 @@ function replace_private_poster_urls( string $content ) : string {
 }
 
 /**
- * Disable srcset generation in preview mode.
+ * Disable srcset generation for private attachments.
  *
- * Signed URLs are unique per size and cannot work with responsive image switching.
+ * Each rendered size of a private attachment is served via its own signed
+ * URL, and the browser picking a different srcset candidate would request
+ * a URL the signature wasn't generated against. Returning an empty
+ * srcset forces the browser to use the (already-signed) `src` attribute.
  *
- * @param array $sources Array of image source data.
- * @return array Empty array in preview mode, original sources otherwise.
+ * Gated on the attachment's privacy state rather than the request context
+ * (`is_preview()` / `REST_REQUEST`) so prefetched, embedded, and cached
+ * renders behave the same as the originating page.
+ *
+ * @param array  $sources       Array of image source data.
+ * @param array  $size_array    [width, height] of the original image.
+ * @param string $image_src     URL of the image source.
+ * @param array  $image_meta    The image metadata.
+ * @param int    $attachment_id The attachment ID.
+ * @return array Empty array for private attachments, original sources otherwise.
  */
-function disable_srcset_in_preview( array $sources ) : array {
-	if ( is_preview() ) {
-		return [];
-	}
-
-	// Also disable in REST context for non-published posts.
-	if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+function disable_srcset_for_private_attachments( array $sources, array $size_array, string $image_src, array $image_meta, int $attachment_id ) : array {
+	if ( ! Visibility\check_attachment_is_public( $attachment_id ) ) {
 		return [];
 	}
 

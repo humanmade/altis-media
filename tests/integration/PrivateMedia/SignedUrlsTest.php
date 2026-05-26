@@ -34,29 +34,44 @@ class SignedUrlsTest extends WPTestCase {
 		parent::tearDown();
 	}
 
-	public function testSrcsetDisabledInPreview() {
-		// Simulate preview context.
-		$GLOBALS['wp_query'] = new \WP_Query();
-		$GLOBALS['wp_query']->is_preview = true;
+	public function testSrcsetDisabledForPrivateAttachment() {
+		$attachment_id = $this->create_test_attachment( [ 'post_status' => 'private' ] );
 
 		$sources = [
 			300 => [ 'url' => 'https://example.com/photo-300.jpg', 'descriptor' => 'w', 'value' => 300 ],
 			600 => [ 'url' => 'https://example.com/photo-600.jpg', 'descriptor' => 'w', 'value' => 600 ],
 		];
 
-		$result = Signed_URLs\disable_srcset_in_preview( $sources );
-		$this->assertEmpty( $result );
+		$result = Signed_URLs\disable_srcset_for_private_attachments(
+			$sources,
+			[ 800, 600 ],
+			'https://example.com/photo.jpg',
+			[],
+			$attachment_id
+		);
 
-		// Reset.
-		$GLOBALS['wp_query']->is_preview = false;
+		$this->assertEmpty( $result );
 	}
 
-	public function testSrcsetPreservedNormally() {
+	public function testSrcsetPreservedForPublicAttachment() {
+		// Force public via override so the priority check returns true regardless
+		// of whether the attachment is referenced by a published post.
+		$attachment_id = $this->create_test_attachment( [], [
+			'altis_override_visibility' => 'public',
+		] );
+
 		$sources = [
 			300 => [ 'url' => 'https://example.com/photo-300.jpg', 'descriptor' => 'w', 'value' => 300 ],
 		];
 
-		$result = Signed_URLs\disable_srcset_in_preview( $sources );
+		$result = Signed_URLs\disable_srcset_for_private_attachments(
+			$sources,
+			[ 800, 600 ],
+			'https://example.com/photo.jpg',
+			[],
+			$attachment_id
+		);
+
 		$this->assertEquals( $sources, $result );
 	}
 
