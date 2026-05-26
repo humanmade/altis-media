@@ -12,6 +12,7 @@ namespace Altis\Media\Private_Media;
 
 use Altis;
 use Altis\Global_Content;
+use S3_Uploads\Plugin;
 use WP_CLI;
 
 /**
@@ -84,6 +85,13 @@ function bootstrap() {
  */
 function bootstrap_feature() {
 	if ( ! is_active() ) {
+		return;
+	}
+
+	// The whole feature depends on S3 Uploads — without it, the ACL writes,
+	// presigned URLs, and canonical-host rewrites all have nothing to call.
+	// Bail here so the rest of the codebase can assume the class exists.
+	if ( ! class_exists( Plugin::class ) ) {
 		return;
 	}
 

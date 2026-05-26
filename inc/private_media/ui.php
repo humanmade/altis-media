@@ -411,10 +411,6 @@ function sign_cover_url_for_attachment( string $url, int $attachment_id ) : stri
 		return $url;
 	}
 
-	if ( ! class_exists( Plugin::class ) ) {
-		return $url;
-	}
-
 	$upload_dir = wp_upload_dir();
 	if ( empty( $upload_dir['baseurl'] ) ) {
 		return $url;

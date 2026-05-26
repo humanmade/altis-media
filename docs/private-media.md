@@ -288,6 +288,6 @@ wp private-media fix_attachments --start-date=2000-01-01 --end-date=2099-12-31
 | `altis.media.private_media.allowed_post_types`        | Array of post types to track for media references.                        |
 | `altis.media.private_media.post_meta_attachment_keys` | Array of field names that store file IDs (like the featured image field). |
 | `altis.media.private_media.post_attachment_ids`       | Array of file IDs found in a post. Receives `$ids`, `$post_id`, and `$post`. |
-| `altis.media.private_media.update_s3_acl`             | Intercept storage permission updates. Return non-null to short-circuit.   |
+| `altis.media.private_media.s3_acl`                    | Filter the S3 ACL string before it is applied. Return an empty string to skip the S3 call. |
 | `private_media/purge_cdn_cache`                       | Intercept CDN cache clearing. Return non-null to short-circuit.           |
 | `private_media/do_purge_cdn_cache`                    | Action fired when CDN cache should be purged for an attachment.           |

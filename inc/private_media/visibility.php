@@ -135,8 +135,10 @@ function set_attachment_visibility( int $attachment_id ) : void {
 /**
  * Update the S3 ACL for an attachment.
  *
- * Filterable via 'altis.media.private_media.update_s3_acl' for testing — if the filter
- * returns non-null, the real S3 call is skipped.
+ * The ACL string is run through the `altis.media.private_media.s3_acl`
+ * filter before being applied — return an empty string to skip the S3
+ * call entirely (used by the test mock to record-and-skip), or return a
+ * different ACL to override the value being set.
  *
  * @param int    $attachment_id The attachment ID.
  * @param string $acl           The ACL to set ('public-read' or 'private').
@@ -144,20 +146,16 @@ function set_attachment_visibility( int $attachment_id ) : void {
  */
 function update_s3_acl( int $attachment_id, string $acl ) : void {
 	/**
-	 * Filter to intercept S3 ACL updates (test seam).
+	 * Filter the S3 ACL string before it is applied.
 	 *
-	 * Return a non-null value to short-circuit the real S3 call.
+	 * Return an empty string to skip the real S3 call. Return a different
+	 * non-empty value to override the ACL being written.
 	 *
-	 * @param null|mixed $result        Return non-null to short-circuit.
-	 * @param int        $attachment_id The attachment ID.
-	 * @param string     $acl           The ACL being set.
+	 * @param string $acl           The ACL ('public-read' or 'private').
+	 * @param int    $attachment_id The attachment ID.
 	 */
-	$result = apply_filters( 'altis.media.private_media.update_s3_acl', null, $attachment_id, $acl );
-	if ( $result !== null ) {
-		return;
-	}
-
-	if ( ! class_exists( Plugin::class ) ) {
+	$acl = apply_filters( 'altis.media.private_media.s3_acl', $acl, $attachment_id );
+	if ( $acl === '' ) {
 		return;
 	}
 

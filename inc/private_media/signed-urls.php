@@ -105,10 +105,6 @@ function sign_rest_content( WP_REST_Response $response, WP_Post $post ) : WP_RES
  * @return string Content with private URLs replaced by signed ones.
  */
 function replace_private_urls( string $content ) : string {
-	if ( ! class_exists( '\\S3_Uploads\\Plugin' ) ) {
-		return $content;
-	}
-
 	$attachments = Content_Parser\extract_attachments_from_content( $content );
 
 	foreach ( $attachments as $attachment ) {
@@ -270,10 +266,6 @@ function rewrite_presigned_url_to_canonical_s3( string $url, int $post_id ) : st
 		if ( $path && preg_match( '/\.(jpe?g|png|gif|webp)$/i', strtok( $path, '?' ) ) ) {
 			return $url;
 		}
-	}
-
-	if ( ! class_exists( '\\S3_Uploads\\Plugin' ) ) {
-		return $url;
 	}
 
 	$instance = Plugin::get_instance();
