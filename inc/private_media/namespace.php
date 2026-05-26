@@ -11,6 +11,7 @@
 namespace Altis\Media\Private_Media;
 
 use Altis;
+use Altis\Global_Content;
 
 /**
  * Check if the private media feature is active for the current site.
@@ -37,7 +38,7 @@ function is_active( ?array $module_config = null ) : bool {
 	// Disable on the global media library site.
 	// Only check when WP is fully loaded (get_site_meta is available).
 	if ( did_action( 'muplugins_loaded' ) ) {
-		if ( function_exists( '\\Altis\\Global_Content\\is_global_site' ) && \Altis\Global_Content\is_global_site() ) {
+		if ( function_exists( '\\Altis\\Global_Content\\is_global_site' ) && Global_Content\is_global_site() ) {
 			return false;
 		}
 	}

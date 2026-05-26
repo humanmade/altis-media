@@ -170,8 +170,8 @@ function add_post_row_actions( array $actions, WP_Post $post ) : array {
 function handle_row_actions() : void {
 	// Handle media visibility row actions.
 	$action = sanitize_text_field( $_GET['action'] ?? '' );
-	$attachment_id = (int) ( $_GET['attachment_id'] ?? 0 );
-	$post_id = (int) ( $_GET['post_id'] ?? 0 );
+	$attachment_id = absint( $_GET['attachment_id'] ?? 0 );
+	$post_id = absint( $_GET['post_id'] ?? 0 );
 
 	// Media visibility actions.
 	if ( in_array( $action, [ 'private_media_set_public', 'private_media_set_private', 'private_media_set_auto' ], true ) && $attachment_id > 0 ) {
@@ -479,9 +479,12 @@ function add_visibility_field( array $form_fields, WP_Post $post ) : array {
 		$post->ID,
 		$post->ID
 	);
-	$html .= sprintf( '<option value="auto" %s>%s</option>', selected( $override, 'auto', false ), esc_html__( 'Automatic', 'altis' ) );
-	$html .= sprintf( '<option value="public" %s>%s</option>', selected( $override, 'public', false ), esc_html__( 'Force Public', 'altis' ) );
-	$html .= sprintf( '<option value="private" %s>%s</option>', selected( $override, 'private', false ), esc_html__( 'Force Private', 'altis' ) );
+	$automatic_label = Visibility\compute_automatic_visibility( $post->ID )
+		? esc_html__( 'Automatic (currently Public)', 'altis' )
+		: esc_html__( 'Automatic (currently Private)', 'altis' );
+	$html .= sprintf( '<option value="auto" %s>%s</option>', selected( $override, 'auto', false ), $automatic_label );
+	$html .= sprintf( '<option value="public" %s>%s</option>', selected( $override, 'public', false ), esc_html__( 'Public', 'altis' ) );
+	$html .= sprintf( '<option value="private" %s>%s</option>', selected( $override, 'private', false ), esc_html__( 'Private', 'altis' ) );
 	$html .= '</select>';
 
 	$form_fields['private_media_override'] = [
@@ -547,7 +550,7 @@ function save_visibility_field( array $post, array $attachment ) : array {
 function ajax_set_visibility() : void {
 	check_ajax_referer( 'private_media_ajax', 'nonce' );
 
-	$attachment_id = (int) ( $_POST['attachment_id'] ?? 0 );
+	$attachment_id = absint( $_POST['attachment_id'] ?? 0 );
 	$override = sanitize_text_field( $_POST['override'] ?? '' );
 
 	if ( $attachment_id <= 0 || ! in_array( $override, [ 'auto', 'public', 'private' ], true ) ) {
@@ -617,7 +620,7 @@ function display_admin_notices() : void {
 	}
 
 	if ( ! empty( $_GET['private_media_bulk_updated'] ) ) {
-		$count = (int) $_GET['private_media_bulk_updated'];
+		$count = absint( $_GET['private_media_bulk_updated'] );
 		printf(
 			'<div class="notice notice-success is-dismissible"><p>%s</p></div>',
 			sprintf(

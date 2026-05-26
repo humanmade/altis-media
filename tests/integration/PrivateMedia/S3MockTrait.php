@@ -106,11 +106,12 @@ trait S3MockTrait {
 		];
 
 		// Remove the private-by-default hook so we can set the ACL meta explicitly.
-		remove_action( 'add_attachment', 'Altis\\Media\\Private_Media\\Visibility\\set_new_attachment_private' );
+		// The hook is registered at priority 0 (see visibility.php) so we must match.
+		remove_action( 'add_attachment', 'Altis\\Media\\Private_Media\\Visibility\\set_new_attachment_private', 0 );
 
 		$id = wp_insert_attachment( array_merge( $defaults, $args ) );
 
-		add_action( 'add_attachment', 'Altis\\Media\\Private_Media\\Visibility\\set_new_attachment_private' );
+		add_action( 'add_attachment', 'Altis\\Media\\Private_Media\\Visibility\\set_new_attachment_private', 0 );
 
 		if ( $acl !== null ) {
 			update_post_meta( $id, '_altis_media_acl', $acl );

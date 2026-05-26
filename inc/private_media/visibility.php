@@ -26,7 +26,7 @@ const META_KEY = '_altis_media_acl';
  * @return void
  */
 function bootstrap() {
-	add_action( 'add_attachment', __NAMESPACE__ . '\\set_new_attachment_private' );
+	add_action( 'add_attachment', __NAMESPACE__ . '\\set_new_attachment_private', 0 );
 	add_filter( 's3_uploads_is_attachment_private', __NAMESPACE__ . '\\filter_is_attachment_private', 10, 2 );
 	add_filter( 's3_uploads_private_attachment_url_expiry', __NAMESPACE__ . '\\filter_private_url_expiry', 10, 2 );
 }
@@ -59,6 +59,20 @@ function check_attachment_is_public( int $attachment_id ) : bool {
 		return true;
 	}
 
+	return compute_automatic_visibility( $attachment_id );
+}
+
+/**
+ * Compute what the automatic visibility would be for an attachment.
+ *
+ * Same priority rules as check_attachment_is_public(), but skips the override
+ * checks. Used to show the "currently Public/Private" hint on the Automatic
+ * dropdown option in the media modal.
+ *
+ * @param int $attachment_id The attachment ID.
+ * @return bool True if the attachment would be public under automatic rules.
+ */
+function compute_automatic_visibility( int $attachment_id ) : bool {
 	// 3. Used in a published post.
 	$used_in = get_used_in_posts( $attachment_id );
 	if ( ! empty( $used_in ) ) {

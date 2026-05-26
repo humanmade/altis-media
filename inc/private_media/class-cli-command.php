@@ -293,7 +293,7 @@ class CLI_Command extends WP_CLI_Command {
 	 * @param string $identifier The attachment ID or filename.
 	 * @return int|null The attachment ID, or null if not found.
 	 */
-	private function resolve_attachment_id( string $identifier ) : ?int {
+	protected function resolve_attachment_id( string $identifier ) : ?int {
 		if ( is_numeric( $identifier ) ) {
 			return (int) $identifier;
 		}

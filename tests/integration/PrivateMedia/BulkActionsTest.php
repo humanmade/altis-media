@@ -15,8 +15,6 @@
 
 namespace PrivateMedia;
 
-require_once __DIR__ . '/S3MockTrait.php';
-
 use Altis\Media\Private_Media\UI;
 use Altis\Media\Private_Media\Visibility;
 use Codeception\TestCase\WPTestCase;
