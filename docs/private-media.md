@@ -22,7 +22,7 @@ Private Media is opt-in. Enable it by adding the following to your `composer.jso
 }
 ```
 
-The feature is always off on the Global Media Library site, even when enabled in configuration.
+Note: The feature is always off on the Global Media Library site.
 
 ## How It Works
 
@@ -35,7 +35,7 @@ Private files are still fully available to logged-in users who can upload media 
 browse them in the media library, insert them into posts, and use them as featured images as normal.
 
 This protection also covers the front-end attachment page (e.g. `/my-image/`). For a private attachment, that page returns a
-404 for visitors who can't edit the file, so it can't be used to hand out a working link to the image.
+404 for visitors who can't edit the file.
 
 ### Files Become Public When Content Is Published
 
@@ -45,7 +45,8 @@ When you publish a post or page, all the media used in it automatically becomes 
 - The featured image (post thumbnail) is included.
 - The files' storage permissions are updated so they can be accessed by visitors.
 
-If the same file is used in more than one published post, it stays public until all of those posts are unpublished.
+If the same file is used in more than one published post, it will become public when the first post is made public. It will stay 
+public until all of those posts are unpublished.
 
 ### Files Return to Private When Content Is Unpublished
 
@@ -68,15 +69,15 @@ at a glance:
 - **Lock icon** (dark badge) — the file is private. This is the most common badge since new uploads start as private.
 - **Globe icon** (blue badge) — the file has been manually forced public.
 - **No badge** — the file is naturally public because it is used in published content. This is the expected state for published
-  media, so no badge is shown to keep the grid clean.
+  media, so no badge is shown.
 
-To change the visibility of a file from grid view, click its thumbnail to open the attachment details panel, then use the
+To change the visibility of a file from the grid view, click its thumbnail to open the attachment details panel, then use the
 **Visibility Override** dropdown — see [Changing Visibility in the Media Browser](#changing-visibility-in-the-media-browser)
 below.
 
 ### List View — the Visibility Column
 
-If you switch the media library to list view, a **Visibility** column shows the current access status of each file in plain text:
+If you switch the media library to list view, a **Visibility** column shows the current visibility of each file:
 
 ![Media library list view showing the Visibility column](./assets/private-media-list.png)
 
@@ -95,8 +96,8 @@ Hover over any row in list view to see the available quick actions:
 
 - **Make Public** — makes the file publicly accessible, even if it is not used in any published content.
 - **Make Private** — makes the file private, even if it is currently used in published content.
-- **Restore Default Visibility** — removes your manual setting and returns the file to automatic management (appears after you have used
-  Make Public or Make Private).
+- **Restore Default Visibility** — removes your manual setting and returns the file to automatic management. This only appears 
+  after you have used Make Public or Make Private).
 
 After changing visibility, a confirmation notice appears at the top of the screen:
 
@@ -123,28 +124,29 @@ The sidebar also shows:
 
 - The current access status of the file.
 - Which published posts are using the file (if any).
-- Whether the file is a legacy (pre-migration) upload.
 
 ## Managing Post Attachments
 
-Posts and pages in the admin list include an extra **Rescan attachment visibility** row action. It walks the post's content, re-records
-which attachments it references, and re-evaluates each one — published posts make their attachments public, anything else makes them
-private unless another published post still uses them. Useful if images appear broken after a migration, an import, or a configuration
-change that bypassed the normal publish/unpublish lifecycle.
+Posts and pages in the admin list include an extra **Rescan attachment visibility** row action. It runs through the post's
+content, re-records which attachments it references, and re-evaluates each one — published posts make their attachments public,
+anything else makes them private unless another published post still uses them. Useful if images appear broken after a migration, an
+import, or a configuration change that bypassed the normal publish/unpublish lifecycle.
 
 ![Post list row showing the Rescan attachment visibility action](./assets/private-media-post-actions.png)
 
 ## Previewing Draft Content
 
 When you preview a draft post, private images in the content are displayed using temporary signed URLs that expire after a short
-period. This means you can see exactly how the post will look without needing to make the images public first.
+period. This means you can see exactly how the post will look without needing to make the images public first. Note: this also
+means if you leave a preview tab open in your browser, the images in it will eventually stop working as the signed URLs expire. Just
+refresh the preview to get new URLs.
 
 ## Existing Uploads
 
 When Private Media is first enabled on a site that already has uploaded files, all existing files remain publicly accessible — no
 migration step is needed. The visibility check treats any attachment that lacks the `_altis_media_acl` post meta as public, so
 files uploaded before the feature was enabled are unaffected. From the moment the feature turns on, every new upload writes the
-meta and is managed by the usual rules.
+meta and is managed by the rules above.
 
 ## Site Icon
 
@@ -158,8 +160,8 @@ precedence.
 
 Set `private-media` to `true` in your Altis configuration to turn the feature on. The feature is off by default and leaves no
 runtime footprint when not enabled: attachments stay at WordPress's default `inherit` status and the `_altis_media_acl` post meta
-that records each file's S3 ACL state is simply ignored. Toggling the feature off and back on is non-destructive — the existing
-ACL meta is read again when re-enabled, no migration is required to come back online.
+that records each file's S3 ACL state is simply ignored. Toggling the feature off and back on is non-destructive, But note, any 
+media currently set to private will remain private in the underlying S3 storage.
 
 The `wp private-media …` commands described below are only registered while the feature is enabled.
 
@@ -211,15 +213,15 @@ would change without applying anything.
 
 ### Which command should I use?
 
-| Situation                                                                            | Command                                       |
-|--------------------------------------------------------------------------------------|-----------------------------------------------|
-| Force a single file public or private (or remove an override) from the shell         | [`set_visibility`](#set-visibility-for-a-specific-file) |
-| Repair drift after a content import, an SQL edit, or a filter change                 | [`fix_attachments`](#repair-attachment-references) |
-| Bulk-rescan all media used by a single post                                          | Use the **Rescan attachment visibility** row action in the Posts list (UI), not CLI |
+| Situation                                                                    | Command                                                                             |
+|------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
+| Force a single file public or private (or remove an override) from the shell | [`set_visibility`](#set-visibility-for-a-specific-file)                             |
+| Repair drift after a content import, an SQL edit, or a filter change         | [`fix_attachments`](#repair-attachment-references)                                  |
+| Bulk-rescan all media used by a single post                                  | Use the **Rescan attachment visibility** row action in the Posts list (UI), not CLI |
 
 ### Set Visibility for a Specific File
 
-```
+```shell
 wp private-media set_visibility <public|private> <id|filename> [--dry-run]
 ```
 
@@ -266,7 +268,7 @@ This is a **repair tool**, not part of the normal lifecycle. Reach for it when:
 The default date range is the **last 30 days based on post date** (not modified date — so this won't catch posts that were
 imported with an old date but published recently). Override with `--start-date` and `--end-date`:
 
-```
+```shell
 # Preview a single day
 wp private-media fix_attachments --start-date=2026-04-01 --end-date=2026-04-01 --dry-run
 
