@@ -33,7 +33,8 @@
 			"inc/private_media/sanitization.php",
 			"inc/private_media/signed-urls.php",
 			"inc/private_media/ui.php",
-			"inc/private_media/site-icon.php"
+			"inc/private_media/site-icon.php",
+			"inc/private_media/attachment-page.php"
 		]
 	},
 	"extra": {

@@ -34,6 +34,9 @@ an access denied error. Under the hood, this is implemented by setting the file'
 Private files are still fully available to logged-in users who can upload media (authors, editors and administrators). You can
 browse them in the media library, insert them into posts, and use them as featured images as normal.
 
+This protection also covers the front-end attachment page (e.g. `/my-image/`). For a private attachment, that page returns a
+404 for visitors who can't edit the file, so it can't be used to hand out a working link to the image.
+
 ### Files Become Public When Content Is Published
 
 When you publish a post or page, all the media used in it automatically becomes publicly accessible:

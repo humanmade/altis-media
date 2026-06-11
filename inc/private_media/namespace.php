@@ -110,6 +110,9 @@ function bootstrap_feature() {
 	// Site icon handling.
 	Site_Icon\bootstrap();
 
+	// Front-end attachment page guard (block public access to private attachments).
+	Attachment_Page\bootstrap();
+
 	// UI hooks (media library, row actions, bulk actions).
 	UI\bootstrap();
 
