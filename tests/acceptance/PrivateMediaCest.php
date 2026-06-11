@@ -36,7 +36,8 @@ class PrivateMediaCest {
 
 		// Upload a file via the Add New Media page.
 		$I->amOnAdminPage( 'media-new.php' );
-		$I->see( 'Upload New Media' );
+		// WP 7.0 renamed this page heading from "Upload New Media" to "Upload Media".
+		$I->see( 'Upload Media' );
 		$I->attachFile( 'input[type="file"]', 'wp-logo.png' );
 		$I->wait( 3 );
 		$I->waitForElement( '.media-item', 30 );
