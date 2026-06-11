@@ -10,6 +10,7 @@
 
 namespace Altis\Media\Private_Media\Visibility;
 
+use Altis\Cloud\Cloudfront_Media_Purge;
 use S3_Uploads\Plugin;
 
 /**
@@ -196,7 +197,7 @@ function purge_cdn_for_attachment( int $attachment_id ) : void {
 		return;
 	}
 
-	\Altis\Cloud\Cloudfront_Media_Purge\purge_media_file_cache( $attachment_id );
+	Cloudfront_Media_Purge\purge_media_file_cache( $attachment_id );
 }
 
 /**
