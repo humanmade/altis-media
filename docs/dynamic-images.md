@@ -68,6 +68,20 @@ additional default modifications using the following filter:
 - `$args` is an array of arguments used to generate the Tachyon URL query string.
 - `$downsize_args` if available provides additional context such as the requested image size name and attachment ID.
 
+## Smart Cropping
+
+When `crop_strategy=smart` is used with `resize`, Tachyon uses
+[smartcrop](https://github.com/jwagner/smartcrop.js#algorithm-overview) to choose the most important region of the image before
+resizing it to the requested dimensions. This is the default for generated image sizes where WordPress cropping is enabled with
+`add_image_size( $name, $width, $height, true )`.
+
+Smart cropping does not simply crop from the geometric center of the image. The algorithm analyses the image for visual detail,
+including edges, skin-like colours and highly saturated areas, then compares candidate crops using a sliding window. Candidate crops
+are ranked to keep important detail near the centre of the output image and away from the edges. The highest ranked crop is used.
+
+If you need deterministic positioning instead of automatic subject detection, pass an explicit WordPress crop position such as
+`[ 'left', 'top' ]`, use Tachyon's `gravity` argument, or provide a precise `crop` rectangle.
+
 ## Query Arguments Reference
 
 The following query string arguments can be applied to any image delivered by Tachyon.
