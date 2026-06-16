@@ -80,7 +80,7 @@ Cropping behavior for the image size is dependent on the value of `$crop`:
     - `y_crop_position` accepts 'top', 'center', or 'bottom'.
       Images will be cropped to the specified dimensions within the defined crop area.
 3. If `true`, images will be cropped to the specified dimensions using smart cropping by default, otherwise falling back to center
-   cropping.
+   cropping. See [Smart Cropping](./dynamic-images.md#smart-cropping) for more detail on how automatic crops are selected.
 
 You can find more info in
 the [WordPress developer guide](https://developer.wordpress.org/themes/functionality/featured-images-post-thumbnails/#add-custom-featured-image-sizes)
