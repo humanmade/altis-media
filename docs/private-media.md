@@ -37,6 +37,11 @@ browse them in the media library, insert them into posts, and use them as featur
 This protection also covers the front-end attachment page (e.g. `/my-image/`). For a private attachment, that page returns a
 404 for visitors who can't edit the file.
 
+The REST API is protected too. For visitors who can't upload media, private attachments simply don't exist over REST: a request
+for a single private attachment (`/wp/v2/media/<id>`) returns a 404, and private attachments are omitted from the media
+collection (`/wp/v2/media`). Logged-in users who can upload media still see private attachments and receive the signed URLs 
+they need (for example, to preview a file in the block editor).
+
 ### Files Become Public When Content Is Published
 
 When you publish a post or page, all the media used in it automatically becomes publicly accessible:

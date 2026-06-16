@@ -113,6 +113,9 @@ function bootstrap_feature() {
 	// Front-end attachment page guard (block public access to private attachments).
 	Attachment_Page\bootstrap();
 
+	// REST API guard (hide private attachments for non-editors).
+	REST_API\bootstrap();
+
 	// UI hooks (media library, row actions, bulk actions).
 	UI\bootstrap();
 
