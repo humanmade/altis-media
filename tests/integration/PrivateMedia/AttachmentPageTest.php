@@ -107,6 +107,53 @@ class AttachmentPageTest extends WPTestCase {
 	}
 
 	/**
+	 * The guard must cancel core's canonical redirect for a blocked private
+	 * attachment, so ?attachment_id=N does not 301 to the slug permalink
+	 * (which would leak the title/filename and confirm the ID exists).
+	 */
+	public function testGuardCancelsCanonicalRedirectForPrivateAttachment() {
+		$id = $this->create_test_attachment( [ 'post_status' => 'private' ] );
+
+		wp_set_current_user( 0 );
+		$this->go_to( get_permalink( $id ) );
+
+		Attachment_Page\guard_private_attachment_page();
+
+		$this->assertTrue( is_404(), 'Sanity: the private attachment page should be a 404.' );
+		$this->assertNotFalse(
+			has_filter( 'redirect_canonical', '__return_false' ),
+			'The guard should suppress redirect_canonical so no slug redirect leaks.'
+		);
+
+		// With the filter applied, core resolves no canonical redirect URL
+		// (returns null/empty) instead of the slug permalink.
+		$this->assertEmpty(
+			redirect_canonical( get_permalink( $id ), false ),
+			'redirect_canonical() must not produce a redirect for a blocked private attachment.'
+		);
+	}
+
+	/**
+	 * A public attachment must still be allowed to redirect canonically — the
+	 * guard only suppresses redirects for blocked private attachments.
+	 */
+	public function testGuardLeavesCanonicalRedirectForPublicAttachment() {
+		$id = $this->create_test_attachment( [], [
+			'altis_used_in_published_post' => [ 42 ],
+		] );
+
+		wp_set_current_user( 0 );
+		$this->go_to( get_permalink( $id ) );
+
+		Attachment_Page\guard_private_attachment_page();
+
+		$this->assertFalse(
+			has_filter( 'redirect_canonical', '__return_false' ),
+			'The guard must not suppress canonical redirects for public attachments.'
+		);
+	}
+
+	/**
 	 * The guard is a no-op on non-attachment requests.
 	 */
 	public function testGuardIgnoresNonAttachmentRequests() {

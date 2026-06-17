@@ -74,4 +74,7 @@ function guard_private_attachment_page() : void {
 	$wp_query->set_404();
 	status_header( 404 );
 	nocache_headers();
+
+	// Stop redirect_canonical() 301ing ?attachment_id=N to the slug, which leaks the title/filename and confirms the ID.
+	add_filter( 'redirect_canonical', '__return_false' );
 }

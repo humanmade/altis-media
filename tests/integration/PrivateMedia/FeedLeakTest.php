@@ -15,7 +15,6 @@
 
 namespace PrivateMedia;
 
-use Altis\Media\Private_Media\Signed_URLs;
 use Altis\Media\Private_Media\Visibility;
 use Codeception\TestCase\WPTestCase;
 
