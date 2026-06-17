@@ -20,15 +20,28 @@ use Codeception\TestCase\WPTestCase;
 use WP_REST_Request;
 use WP_REST_Response;
 
+/**
+ * Test access to private media via the REST API.
+ */
 class RestApiTest extends WPTestCase {
 	use S3MockTrait;
 
+	/**
+	 * Set up the S3 mock object
+	 *
+	 * @return void
+	 */
 	public function setUp() : void {
 		parent::setUp();
 		$this->setup_s3_mock();
 		$this->ensure_rest_hooks();
 	}
 
+	/**
+	 * Tear down the S3_mock and user.
+	 *
+	 * @return void
+	 */
 	public function tearDown() : void {
 		$this->teardown_s3_mock();
 		wp_set_current_user( 0 );
@@ -64,7 +77,9 @@ class RestApiTest extends WPTestCase {
 	 */
 	private function ids_in( WP_REST_Response $response ) : array {
 		return array_map(
-			fn ( $item ) => (int) ( is_array( $item ) ? $item['id'] : $item->id ),
+			function ( $item ) {
+				return (int) ( is_array( $item ) ? $item['id'] : $item->id );
+			},
 			(array) $response->get_data()
 		);
 	}

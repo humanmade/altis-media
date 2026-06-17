@@ -43,17 +43,15 @@ const HIDE_QUERY_VAR = 'altis_private_media_hide';
  * @return void
  */
 function bootstrap() : void {
-	// 1. 404 the single-item endpoint for private attachments.
+	// 404 the single-item endpoint for private attachments.
 	add_filter( 'rest_pre_dispatch', __NAMESPACE__ . '\\hide_private_attachment_item', 10, 3 );
 
-	// 2. Omit private attachments from collection listings. The query is tagged
-	//    in the REST args and the exclusion is applied in posts_where so it's
-	//    part of the SQL (pagination and X-WP-Total stay correct).
+	// Omit private attachments from collection listings.
 	add_filter( 'rest_attachment_query', __NAMESPACE__ . '\\exclude_private_attachments_from_query', 10, 2 );
 	add_filter( 'posts_where', __NAMESPACE__ . '\\filter_hide_private_where', 10, 2 );
 
-	// 3. Defense in depth: strip signed URLs from any private attachment that
-	//    still reaches a prepared response (e.g. embedded via `_embed`).
+	// Defence in depth: strip signed URLs from any private attachment that
+	// still reaches a prepared response (e.g. embedded via `_embed`).
 	add_filter( 'rest_prepare_attachment', __NAMESPACE__ . '\\scrub_private_attachment_urls', 10, 2 );
 }
 
