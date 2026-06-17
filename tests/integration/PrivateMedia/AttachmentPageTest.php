@@ -20,6 +20,11 @@ use Codeception\TestCase\WPTestCase;
 class AttachmentPageTest extends WPTestCase {
 	use S3MockTrait;
 
+	/**
+	 * Set up s3 mock object
+	 *
+	 * @return void
+	 */
 	public function setUp() : void {
 		parent::setUp();
 		$this->setup_s3_mock();
@@ -28,6 +33,11 @@ class AttachmentPageTest extends WPTestCase {
 		update_option( 'wp_attachment_pages_enabled', 0 );
 	}
 
+	/**
+	 * Tear down s3 mock object and reset user
+	 *
+	 * @return void
+	 */
 	public function tearDown() : void {
 		$this->teardown_s3_mock();
 		wp_set_current_user( 0 );
