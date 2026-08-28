@@ -26,8 +26,37 @@ function bootstrap() {
 		remove_filter( 'posts_clauses', 'HM\\AWS_Rekognition\\filter_query_attachment_keywords' );
 	}, 11 );
 
+	$config = Altis\get_config()['modules']['media'];
+
+	// WP 7.1+ enables Media Library infinite scrolling by default, which is bad for
+	// accessibility on large libraries. Opting out of this config removes our filter
+	// and restores whatever WordPress core does by default.
+	if ( $config['disable-media-library-infinite-scroll'] ?? true ) {
+		add_filter( 'media_library_infinite_scrolling', '__return_false' );
+		add_action( 'admin_enqueue_scripts', __NAMESPACE__ . '\\hide_infinite_scrolling_profile_field' );
+	}
+
 	// Set up global asset management.
 	Global_Assets\bootstrap();
+}
+
+/**
+ * Hide the per-user "Infinite Scrolling" profile option.
+ *
+ * Our `media_library_infinite_scrolling` filter takes precedence over the user
+ * preference, so leaving the checkbox visible would show a control that does
+ * nothing. Core renders the row as `<tr class="user-infinite-scrolling-wrap">`
+ * in wp-admin/user-edit.php with no hook to remove it, so CSS is the only option.
+ *
+ * @param string $hook_suffix The current admin page.
+ * @return void
+ */
+function hide_infinite_scrolling_profile_field( string $hook_suffix ) : void {
+	if ( ! in_array( $hook_suffix, [ 'profile.php', 'user-edit.php' ], true ) ) {
+		return;
+	}
+
+	wp_add_inline_style( 'common', '.user-infinite-scrolling-wrap { display: none; }' );
 }
 
 /**
