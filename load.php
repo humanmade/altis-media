@@ -25,6 +25,7 @@ add_action( 'altis.modules.init', function () {
 		],
 		'global-media-library' => false,
 		'local-media-library' => true,
+		'disable-media-library-infinite-scroll' => true,
 	];
 	$options = [
 		'defaults' => $default_settings,
