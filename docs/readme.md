@@ -6,4 +6,6 @@ The Media module includes features and enhancements related to uploaded media. T
 includes [lazy loading](./lazy-loading.md), [AI powered image classification](./image-recognition.md)
 plus [dynamic image manipulation](./dynamic-images.md) and cropping tools.
 
-In addition to the above features there are low-level enhancements including SVG sanitization to mitigate XSS attacks.
+In addition to the above features there are low-level enhancements including SVG sanitization to mitigate XSS attacks,
+plus accessibility improvements such as disabling
+[Media Library infinite scrolling](./media-library-infinite-scrolling.md) by default.
