@@ -17,7 +17,7 @@
 		"humanmade/aws-rekognition": "~0.1.10",
 		"humanmade/rename-images-command": "^0.1.0",
 		"humanmade/asset-manager-framework": "^0.13.6",
-		"humanmade/amf-wordpress": "^0.3.0"
+		"humanmade/amf-wordpress": "^0.3.1"
 	},
 	"autoload": {
 		"classmap": [
