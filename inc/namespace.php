@@ -200,7 +200,7 @@ function load_safe_svg() {
 	$filter = $wp_filter['wp_get_attachment_image_src'];
 	foreach ( $filter->callbacks as $priority => $callbacks ) {
 		foreach ( $callbacks as $callback ) {
-			if ( is_array( $callback['function'] ) && $callback['function'][0] instanceof \safe_svg && $callback['function'][1] === 'one_pixel_fix' ) {
+			if ( is_array( $callback['function'] ) && $callback['function'][0] instanceof \SafeSvg\safe_svg && $callback['function'][1] === 'one_pixel_fix' ) {
 				remove_filter( 'wp_get_attachment_image_src', $callback['function'], $priority );
 				break( 2 );
 			}
