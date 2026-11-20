@@ -17,6 +17,7 @@ jobs:
     uses: humanmade/altis-dev-tools/.github/workflows/module-ci.yml@module-ci-v1
     with:
       altis-package: altis/media
+      module-config: '{"media":{"private-media":true}}'
     secrets:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
